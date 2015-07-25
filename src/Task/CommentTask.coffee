@@ -46,7 +46,7 @@ module.exports = class CommentTask extends Task
   # received models. Will only be called occasionally within the flow of a
   # 'reversed' model request.
   backlogParameters: (start, length) ->
-    fullnames = @fullnameList(start, length)
+    fullnames = @fullnames(start, length)
 
     url: 'https://oauth.reddit.com/api/info'
     qs:
