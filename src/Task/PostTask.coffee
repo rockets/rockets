@@ -14,8 +14,8 @@ module.exports = class PostTask extends Task
   initialParameters: () ->
     url: 'https://oauth.reddit.com/r/all/new'
     qs:
-      limit: 1        #
-      raw_json: 1     # We don't want the JSON data to be encoded.
+      limit: 1      # We only need a single model to determine the initial ID.
+      raw_json: 1   # We don't want the JSON data to be encoded.
 
 
   # The request parameters for all future 'reversed' requests.
@@ -47,5 +47,5 @@ module.exports = class PostTask extends Task
 
     url: "https://oauth.reddit.com/by_id/#{fullnames}"
     qs:
-      limit: length    # The maximum amount of results we'd like to receive.
+      limit: length   # The maximum amount of results we'd like to receive.
       raw_json: 1     # We don't want the JSON data to be encoded.

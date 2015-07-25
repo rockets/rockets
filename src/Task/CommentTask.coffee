@@ -14,9 +14,9 @@ module.exports = class CommentTask extends Task
   initialParameters: () ->
     url: 'https://oauth.reddit.com/r/all/comments'
     qs:
-      sort: 'new'     #
-      limit: 1        #
-      raw_json: 1     # We don't want the JSON data to be encoded.
+      sort: 'new'   # Sort by 'new' to get the most recent comments.
+      limit: 1      # We only need a single model to determine the initial ID.
+      raw_json: 1   # We don't want the JSON data to be encoded.
 
 
   # The request parameters for all future 'reversed' requests.
@@ -24,7 +24,7 @@ module.exports = class CommentTask extends Task
   reversedParameters: () ->
     url: 'https://oauth.reddit.com/r/all/comments'
     qs:
-      sort: 'new'         #
+      sort: 'new'         # Sort by 'new' to get the most recent comments.
       limit: Task.LIMIT   # The maximum amount of results we'd like to receive.
       raw_json: 1         # We don't want the JSON data to be encoded.
 
@@ -32,7 +32,7 @@ module.exports = class CommentTask extends Task
   # The request parameters for all future 'forward' requests.
   # These are used to fetch the models newer than the most recently processed.
   forwardParameters: () ->
-    ids = @fullnames(@latest + 1, Task.LIMIT)
+    fullnames = @fullnames(@latest + 1, Task.LIMIT)
 
     url: 'https://oauth.reddit.com/api/info'
     qs:
