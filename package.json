@@ -1,0 +1,32 @@
+{
+  "name": "Rockets",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": {
+    "name": "Rudi Theunissen",
+    "email": "rudolf.theunissen@gmail.com",
+    "url": "https://github.com/rtheunissen"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "async": "~1.2.1",
+    "bunyan": "^1.4.0",
+    "coffee-script": "^1.9.3",
+    "dotenv": "^1.2.0",
+    "request": "~2.58.0",
+    "uuid": "^2.0.1",
+    "ws": "^0.7.2"
+  },
+  "devDependencies": {
+    "chai": "^3.0.0",
+    "mocha": "^2.2.5",
+    "coffeelint": "^1.10.1"
+  },
+  "scripts": {
+    "test": "mocha --require ./test --compilers coffee:coffee-script/register --recursive",
+    "posttest": "find ./src -name *.coffee | xargs ./node_modules/.bin/coffeelint",
+    "start": "pm2 start server.js --name rockets"
+  }
+}
