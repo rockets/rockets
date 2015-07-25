@@ -78,15 +78,19 @@ A filter is considered a match if any of the values match the corresponding valu
 
 ## Limitations
 
+#### Dropped connections
+
+The server will drop all connections when being updated or restarted, which can't be avoided. Make sure that your client
+will attempt to reconnect automatically when a connection is dropped. Updates will be posted to /r/redditdev in the event
+of unexpected downtime.
+
 #### Latency
 
 Even though the command center is in low reddit orbit, there will always be some delay between a model's creation and its broadcast. Most of the time this delay will only be a few seconds, but could be several minutes in some cases. This occurs when reddit.com goes down, or during very busy periods. The command center will catch up again when things are back to normal or when busy periods subside. Data will not be lost during this time.
 
 #### Bandwidth
 
-A single model is roughly 1kb of JSON. The command center receives an average of 30 models per second. This works out to about 2.6GB per day, per unfiltered connection.
-With a limit of 8TB downstream traffic per month, this equates to a maximum of roughly 100 concurrent unfiltered connections.
-
+A single model is roughly 1kb of JSON. The command center receives an average of 30 models per second. This works out to about 2.6GB per day, per unfiltered connection. With a limit of 8TB downstream traffic per month, this equates to a maximum of roughly 100 concurrent unfiltered connections.
 
 #### Subscriptions
 
@@ -100,7 +104,7 @@ There are a few ways to resupply and assist the CC:
 
 - Use filters to avoid receiving unwanted data.
 - Donate a few dollars to help cover server costs.
-- Sponsor this app if you have an abundance of resources.
+- Sponsor this app if you have a lot of bandwidth at your disposal.
 
 ## Credits
 
