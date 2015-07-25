@@ -36,7 +36,7 @@ A filter is considered a match if any of the values match the corresponding valu
 
 | Key       | Type            | Description                                                      |
 |-----------|-----------------|------------------------------------------------------------------|
-| contains  | string (regex)  | Comment body, case-insensitive                                   |
+| contains  | string (regex)  | Comment body (markdown), case-insensitive                        |
 | subreddit | string          | Subreddit in which the comment was made, eg. "subreddit"         |
 | author    | string          | The user who made the comment, eg. "username"                    |
 | post      | string          | Comments that are replies to a specific post, eg. "t3_abcd"      |
@@ -46,11 +46,11 @@ A filter is considered a match if any of the values match the corresponding valu
 
 | Key       | Type            | Description                                                      |
 |-----------|-----------------|------------------------------------------------------------------|
-| contains  | string (regex)  | Link title and selftext, case-insensitive                        |
+| contains  | string (regex)  | Link title and selftext (markdown), case-insensitive             |
 | subreddit | string          | Subreddit in which the post was made, eg. "subreddit"            |
 | author    | string          | The user who made the post, eg. "username"                       |
-| domain    | string          | Link post's domain, or "self.subreddit" if it's a selfpost       |
-| url       | string          | Link post's URL, or the post's permalink if it's a selfpost      |
+| domain    | string          | Link's domain, or "self.subreddit" if it's a selfpost            |
+| url       | string          | Link's URL, or the post's permalink if it's a selfpost           |
 | nsfw      | boolean         | Flagged NSFW at the time of creation                             |
 
 
