@@ -10,6 +10,12 @@ Many reddit bots rely on monitoring new content, constantly sending requests to 
 
 You will receive JSON models exactly as they appear in reddit listings, ie. with `kind` and `data` keys. These will be sent one at a time, but are not guaranteed to be in perfect chronological order due to the level of concurrency on the server.
 
+## Demo
+
+```js
+node client.js
+```
+
 ## Subscriptions
 
 Subscriptions are sent as JSON in the following format:
