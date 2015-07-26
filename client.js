@@ -44,7 +44,7 @@ socket.on('message', function (data) {
   var subr = 'r/' + data.subreddit;
   var text = data.body.replace(/\s/g, ' ');
 
-  var formatted = date + ": by " + user + ' in ' + subr + ': ' + text;
+  var message = date + ": by " + user + ' in ' + subr + ': ' + text;
   var maxLength = 120;
 
   // Truncate if required so that it fits nicely in a terminal window.
