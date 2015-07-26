@@ -12,7 +12,7 @@ You will receive JSON models exactly as they appear in reddit listings, ie. with
 
 ## Demo
 
-```js
+```bash
 git clone git@github.com:rtheunissen/rockets
 cd rockets
 npm install
