@@ -19,6 +19,16 @@ socket.on('open', function () {
   }));
 });
 
+// Called when the socket connection is closed.
+socket.on('close', function () {
+  console.log('Disconnected');
+});
+
+// Called when the socket encounters an error.
+socket.on('error', function (err) {
+  console.error(err);
+});
+
 // Called when a new message is received from the command center.
 socket.on('message', function (data) {
 
