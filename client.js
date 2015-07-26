@@ -44,13 +44,13 @@ socket.on('message', function (data) {
   var subr = 'r/' + data.subreddit;
   var text = data.body.replace(/\s/g, ' ');
 
-  var message = date + ": by " + user + ' in ' + subr + ': ' + text;
+  var formatted = date + ": by " + user + ' in ' + subr + ': ' + text;
   var maxLength = 120;
 
   // Truncate if required so that it fits nicely in a terminal window.
-  if (message.length > maxLength) {
-      message = message.substring(0, maxLength - 3) + '...';
+  if (formatted.length > maxLength) {
+      formatted = formatted.substring(0, maxLength - 3) + '...';
   }
 
-  console.log(message);
+  console.log(formatted);
 });
