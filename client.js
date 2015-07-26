@@ -8,6 +8,10 @@ var socket = new WebSocket("ws://rockets.cc:3210");
 
 // Called when the socket connection is ready for use.
 socket.on('open', function () {
+  console.log('Connected');
+
+  // Send a subscription to the command center.
+  // We want to receive all comments that contain the words 'LOL' or 'haha'.
   socket.send(JSON.stringify({
       channel: 'comments',
       filters: {
