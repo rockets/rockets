@@ -4,13 +4,24 @@ Queue which is responsible for:
 ###
 module.exports = class ModelQueue extends Queue
 
+
+  @HISTORY = {}
+
   # Send a model to each worker.
   process: (model, next) ->
+
+    if model.data.id of ModelQueue.HISTORY
+      console.log '###############################'
+      console.log ' DUPLICATE MODEL EMIT DETECTED'
+      console.log '###############################'
+
+
+    console.log parseInt(model.data.id, 36)
 
     # Exclude deleted models entirely.
     if model.data.author?.toLowerCase() in ['[deleted]', '[removed]']
       return next()
-    
+
     switch model.kind
       when 't1' then channel = 'comments'
       when 't3' then channel = 'posts'

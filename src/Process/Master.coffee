@@ -6,8 +6,8 @@ Master process, responsible for:
 module.exports = class Master
 
   constructor: () ->
-    @queue   = new ModelQueue()
-    @oauth   = new OAuth2()
+    @queue = new ModelQueue()
+    @oauth = new OAuth2()
 
     @fork()
     @run()
@@ -38,14 +38,41 @@ module.exports = class Master
     # This will be the task schedule to keep iterating through.
     schedule = []
 
-    # Alternate between forward post requests and reversed comment requests.
-    for _ in [0...60]
-      schedule = schedule.concat [
-        posts.forward()
-        comments.reversed()
-      ]
+    ###
+    Forward requests
+    ================
+    Fetches models by requesting info on future ID's. All tasks keep track of
+    the most recently processed model, so bulk ID requests are made using that
+    id followed by the next 100 successive ID's.
 
-    # After 60 seconds, do a reversed post request.
-    schedule.push posts.forward()
+    Reversed requests
+    =================
+    Fetches models from newest to oldest, and uses 'forward' requests to patch
+    the gaps that occur when the newest model in the response is too far ahead
+    of the most recently processed model. For example, if we just processed
+    ID '100', then receive ID '220', that means that there has been ~120 models
+    since, creating a gap between '100' and '120' due to the 100 model limit.
+    By requesting 101 -> 120, we patch the 'backlog' gap using forward requests.
 
+    Posts
+    =====
+    Requesting posts in reverse is not ideal because reddit caches the results
+    of /r/all/new for 60 seconds (even when using the API). Posts therefore have
+    to be requested forward by requesting info on future ID's. This yields posts
+    very soon after they are created (therefore low latency), but there is a
+    risk of encountering a deadzone where the list of ID's will never resolve.
+    The solution is to do a reversed post request every ~60 seconds, just to
+    check that things are still on track.
+
+    Comments
+    ========
+    Requesting comments in reverse is ideal, because reddit does not cache the
+    results at all. We just keep requesting in reverse indefinitely.
+    ###
+
+    for _ in [0...30]
+      schedule.push comments.reversed()
+      schedule.push posts.forward()
+
+    schedule.push posts.reversed()
     return schedule
