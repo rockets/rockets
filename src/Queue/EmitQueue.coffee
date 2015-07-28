@@ -4,6 +4,6 @@ Queue which is responsible for:
 ###
 module.exports = class EmitQueue extends Queue
 
-  # Processes an emit task (sends a payload to a client).
+  # Processes an emit task (sends a model to a client).
   process: (task, done) ->
-    task.client.send(task.payload, done)
+    task.client.send(task.model, done)
