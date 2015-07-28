@@ -3,13 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "license": "MIT",
   "author": {
     "name": "Rudi Theunissen",
     "email": "rudolf.theunissen@gmail.com",
     "url": "https://github.com/rtheunissen"
   },
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rtheunissen/rockets.git"
+  },
   "dependencies": {
     "async": "~1.2.1",
     "bunyan": "^1.4.0",
