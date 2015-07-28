@@ -27,6 +27,7 @@
   "scripts": {
     "test": "mocha --require ./test --compilers coffee:coffee-script/register --recursive",
     "posttest": "find ./src -name *.coffee | xargs ./node_modules/.bin/coffeelint",
-    "start": "pm2 start server.js --name rockets"
+    "start": "pm2 start server.js --name rockets --node-args=\"--stack-size=8192\"",
+    "stop": "pm2 stop rockets"
   }
 }
