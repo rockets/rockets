@@ -21,7 +21,7 @@ module.exports = class Worker
   # Called when an error occurred.
   # See https://nodejs.org/api/child_process.html#child_process_event_error
   onError: (err) ->
-    log.error err
+    log.error err, err?.stack
 
 
   # Sends a task to the emit queue which will send the model to the client.
@@ -33,7 +33,7 @@ module.exports = class Worker
   # subscription should receive the given model, in which case enqueues a task
   # to send the model to the client that created the subscription.
   sendToChannel: (channel, model) ->
-    for clientId, subscription of channel?.subscriptions or []
+    for clientId, subscription of channel.subscriptions or []
       if subscription.match model
         @enqueue subscription.client, model
 
@@ -43,5 +43,5 @@ module.exports = class Worker
   onMessage: (message) ->
     channel = @server.getChannels().getChannel(message.channel)
 
-    async.nextTick () =>
+    if channel
       @sendToChannel channel, message.model

@@ -6,9 +6,6 @@ Master process, responsible for:
 module.exports = class Master
 
   constructor: () ->
-    @queue = new ModelQueue()
-    @oauth = new OAuth2()
-
     @fork()
     @run()
 
@@ -18,25 +15,27 @@ module.exports = class Master
     cluster.fork() for _ in [0...(os.cpus().length-1)]
 
 
-  # Builds request tasks, and starts the loop to process them indefinitely.
+  # Returns an array of model fetch tasks to run
   run: () ->
+    oauth = new OAuth2()
+    queue = new ModelQueue()
 
-    # Cache this so that we don't re-create it every time
-    tasks = @tasks()
+    comments = new CommentTask(oauth, queue)
+    posts    = new PostTask(oauth, queue)
+
+    # This will be the task schedule to keep iterating through.
+    tasks = []
+
+    for _ in [0...20]
+      tasks.push comments.reversed()
+      tasks.push posts.forward()
+
+    tasks.push posts.reversed()
 
     # Run all tasks in series, forever.
     async.forever (next) ->
       async.series tasks, next
 
-
-  # Returns an array of model fetch tasks to run
-  tasks: () ->
-
-    comments = new CommentTask(@oauth, @queue)
-    posts = new PostTask(@oauth, @queue)
-
-    # This will be the task schedule to keep iterating through.
-    schedule = []
 
     ###
     Forward requests
@@ -67,12 +66,5 @@ module.exports = class Master
     Comments
     ========
     Requesting comments in reverse is ideal, because reddit does not cache the
-    results at all. We just keep requesting in reverse indefinitely.
+    results. We just keep requesting in reverse indefinitely.
     ###
-
-    for _ in [0...30]
-      schedule.push comments.reversed()
-      schedule.push posts.forward()
-
-    schedule.push posts.reversed()
-    return schedule

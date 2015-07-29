@@ -4,7 +4,7 @@ Wraps around async.queue
 module.exports = class Queue
 
   constructor: () ->
-    @queue = async.queue @process.bind(@)
+    @queue = async.queue async.ensureAsync(@process.bind(@))
 
 
   # Pushes tasks onto the queue.

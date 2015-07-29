@@ -28,6 +28,11 @@ module.exports = class SocketServer
   onConnect: (socket) ->
     client = new SocketClient(socket)
 
+    log.info {
+      event: 'connect',
+      client: client.id,
+    }
+
     # Called when an incoming message is received
     socket.on 'message', (message) =>
       @onMessage(message, client)
@@ -35,11 +40,6 @@ module.exports = class SocketServer
     # Called when the connection to a client is lost.
     socket.on 'close', () =>
       @onDisconnect(client)
-
-    log.info {
-      event: 'connect',
-      client: client.id,
-    }
 
 
   # Called when the connection to a client is lost.

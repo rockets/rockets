@@ -13,5 +13,5 @@ module.exports = class SocketClient
     if typeof data isnt 'string' then data = JSON.stringify(data)
 
     @socket.send data, (error) ->
-      if error then log.error error
+      if error then log.error error, error.stack
       done?()

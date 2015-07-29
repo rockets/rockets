@@ -29,6 +29,7 @@ module.exports = class Task
 
   # Pushes models onto the model queue.
   enqueue: (models, done) ->
+
     log.info {
       event: 'models',
       kind: @fullnamePrefix(),
@@ -136,6 +137,7 @@ module.exports = class Task
   # Fetches a backlog of models starting from and including 'start', up to and
   # including 'end'. Calls 'done' with the list of fetched backlog models.
   fetchBacklog: (start, end, done) ->
+
     backlog = []
 
     # Fetch task
