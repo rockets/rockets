@@ -41,7 +41,7 @@ module.exports = class SocketServer
     socket.on 'close', () =>
       @onDisconnect(client)
 
-    socket.on 'error', log.errorHandler
+    socket.on 'error', Log.errorHandler
 
 
   # Called when the connection to a client is lost.
@@ -74,16 +74,20 @@ module.exports = class SocketServer
       when Channel.COMMENTS then return new CommentFilter(data.filters)
 
 
+  # Logs a client error then sends it to the client.
+  clientError: (client, error) ->
+    log.error   {error}
+    client.send {error}
+
   # Determines and returns a channel instance for the given data.
   # Sends an error to the client if the channel is not supported.
   getChannel: (data, client) ->
     if data.channel in [Channel.POSTS, Channel.COMMENTS]
       return @channels.createChannel(data.channel)
 
-    client.send {
-      error:
-        name: 'ValueError'
-        message: 'Unsupported channel'
+    @clientError client, {
+      name: 'ValueError'
+      message: 'Unsupported channel'
     }
 
 
@@ -93,10 +97,10 @@ module.exports = class SocketServer
     try
       return JSON.parse(message)
     catch error
-      client.send {
-        error:
-          name: error.name
-          message: error.message
+
+      @clientError client, {
+        name: error.name
+        message: error.message
       }
 
 
