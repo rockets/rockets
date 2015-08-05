@@ -13,14 +13,11 @@ module.exports = class Log
 
   # Bundle log data into a consistent format.
   bundle: (data) ->
-
-    bundle = {
+    return JSON.stringify {
       date: new Date().toLocaleDateString(),
       time: new Date().toTimeString(),
       data: data,
     }
-
-    return JSON.stringify(bundle, null, 2)
 
 
   # Log arbitrary arguments to the info log
