@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "async": "~1.2.1",
-    "bunyan": "^1.4.0",
     "coffee-script": "^1.9.3",
     "dotenv": "^1.2.0",
     "request": "~2.58.0",

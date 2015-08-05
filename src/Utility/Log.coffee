@@ -3,10 +3,10 @@ Wraps around bunyan to create a consistent logging interface.
 ###
 module.exports = class Log
 
-  errorHandler: (error) ->
+  errorHandler: (err) ->
     @error {
-      error: error or 'Unknown',
-      stack: error?.stack
+      error: err or 'Unknown',
+      stack: err?.stack
     }
 
 

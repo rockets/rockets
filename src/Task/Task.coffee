@@ -101,7 +101,7 @@ module.exports = class Task
 
   # Fetches models 'forward'
   fetchForward: (done) ->
-    parameters = @reversedParameters()
+    parameters = @forwardParameters()
 
     log.info {
       event: 'task.forward',

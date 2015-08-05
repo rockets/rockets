@@ -44,7 +44,7 @@ module.exports = class PostTask extends Task
   # received models. Will only be called occasionally within the flow of a
   # 'reversed' model request.
   backlogParameters: (start, length) ->
-    fullnames = @fullnames(@latest + 1, Task.LIMIT)
+    fullnames = @fullnames(start, length)
 
     url: 'https://oauth.reddit.com/api/info'
     qs:

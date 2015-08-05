@@ -8,3 +8,9 @@ require('coffee-script').register();
 
 // Require all files in /src
 require('../src')();
+
+// Create a fake log instance
+log = {
+    info:  function () {},
+    error: function () {},
+};
