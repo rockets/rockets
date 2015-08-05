@@ -23,7 +23,6 @@ describe 'SocketServer', ->
       assert.deepEqual(client.last, {
         error:
           message: "Unexpected token ;"
-          name: "SyntaxError"
       })
       assert.isUndefined(parsed)
 
@@ -46,7 +45,6 @@ describe 'SocketServer', ->
       assert.isUndefined(channel)
       assert.deepEqual(client.last, {
         error:
-          name: 'ValueError',
           message: 'Unsupported channel'
       })
 

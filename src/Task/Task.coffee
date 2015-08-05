@@ -58,12 +58,11 @@ module.exports = class Task
 
 
   # Pushes models onto the model queue.
-  enqueue: (models, done) ->
-
+  enqueue: (models) ->
     created = models[models.length - 1].data.created_utc
 
     # Only enqueue models that weren't created before the process started.
-    if created < process.started then return done()
+    if created < process.started then return
 
     log.info {
       event: 'models',
@@ -73,7 +72,6 @@ module.exports = class Task
     }
 
     @queue.push models
-    done()
 
 
   # Fetches models using given parameters then feeds them to a model processor.
@@ -129,7 +127,8 @@ module.exports = class Task
   # Sets the initial value of the most recently processed model.
   processInitial: (models, done) ->
     @latest = @idToIndex(models[0].data.id)
-    @enqueue(models, done)
+    @enqueue(models)
+    return done()
 
 
   # Processes the models from a 'forward' request.
@@ -146,7 +145,8 @@ module.exports = class Task
     @latest = @idToIndex(models[models.length - 1].data.id)
 
     # Push models onto the model queue (processed one by one)
-    return @enqueue models, done
+    @enqueue(models)
+    return done()
 
 
   # Processes the models from a 'reversed' request.
@@ -179,7 +179,8 @@ module.exports = class Task
 
         # Slice only the newest models, starting from but excluding the most
         # recently processed model.
-        return @enqueue models[parseInt(index) + 1...], done
+        @enqueue models[parseInt(index) + 1...]
+        return done()
 
     # We couldn't find the most recently processed model in the list of new
     # models, which means that there's a backlog of models that lie in-between.
@@ -194,7 +195,8 @@ module.exports = class Task
       @latest = newest
 
       # Append the models models to the back of the backlog models
-      return @enqueue backlog.concat(models), done
+      @enqueue backlog.concat(models)
+      return done()
 
 
   # Fetches a backlog of models starting from and including 'start', up to and

@@ -29,7 +29,7 @@ module.exports = class SocketServer
     client = new SocketClient(socket)
 
     log.info {
-      event: 'connect',
+      event: 'client.connect',
       client: client.id,
     }
 
@@ -49,7 +49,7 @@ module.exports = class SocketServer
     @channels.removeClient(client)
 
     log.info {
-      event: 'disconnect',
+      event: 'client.disconnect',
       client: client.id,
     }
 
@@ -58,7 +58,7 @@ module.exports = class SocketServer
   onMessage: (message, client) ->
 
     log.info {
-      event: 'message',
+      event: 'client.message',
       message: message,
       client: client.id,
     }
@@ -85,10 +85,12 @@ module.exports = class SocketServer
     if data.channel in [Channel.POSTS, Channel.COMMENTS]
       return @channels.createChannel(data.channel)
 
-    @clientError client, {
-      name: 'ValueError'
+    error = {
       message: 'Unsupported channel'
     }
+
+    log.error   {error}
+    client.send {error}
 
 
   # Attempts to parse an incoming message.
@@ -96,12 +98,14 @@ module.exports = class SocketServer
   parseMessage: (message, client) ->
     try
       return JSON.parse(message)
-    catch error
+    catch err
 
-      @clientError client, {
-        name: error.name
-        message: error.message
+      error = {
+        message: err.message,
       }
+
+      log.error   {error}
+      client.send {error}
 
 
   # Handles the data of a parsed message.

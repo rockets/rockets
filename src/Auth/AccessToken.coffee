@@ -11,8 +11,9 @@ module.exports = class AccessToken
 
 
   # Determines whether this access token has expired.
+  # Uses a 5 second safety period just to make sure.
   hasExpired: () ->
-    return Date.now() // 1000 > @expires
+    return (@expires - Date.now() // 1000) < 5
 
 
   # Returns the request authorization headers for this token.

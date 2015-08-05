@@ -21,7 +21,7 @@ module.exports = class OAuth2
       return callback(@token)
 
     log.info {
-      event: 'authenticating',
+      event: 'token.request',
     }
 
     options =
@@ -39,13 +39,24 @@ module.exports = class OAuth2
     request options, (error, response, body) =>
       if response?.statusCode is 200
         try
-          @token = new AccessToken(JSON.parse(body))
+          @token = new AccessToken JSON.parse(body)
+
+          log.info {
+            event: 'token.created',
+            token: @token.access_token,
+          }
+
         catch exception
-          message = 'Unexpected access token JSON response'
-          log.error {message, error, response, body, exception}
+          log.error {
+            message: 'Unexpected access token JSON response',
+            response: response
+          }
+
       else
-        message = 'Unexpected status code for access token request'
-        log.error {message, error, response}
+        log.error {
+          message: 'Unexpected status code for access token request',
+          response: response
+        }
 
       callback(@token)
 
@@ -74,17 +85,27 @@ module.exports = class OAuth2
   # Requests models from reddit.com using given request parameters.
   # Passes models to a handler or `false` if the request was unsuccessful.
   models: (parameters, handler) ->
+
+    log.info {
+      event: 'request.models',
+      parameters: parameters,
+    }
+
     @request parameters, (error, response, body) ->
 
-      # 200 is the only other success code.
       if response?.statusCode is 200
 
         # Attempt to parse the response JSON
         try
           parsed = JSON.parse(body)
+
         catch exception
-          message = 'Failed to parse JSON response'
-          log.error {message, error, response, body, parameters}
+          log.error {
+            message: 'Failed to parse JSON response',
+            body: body,
+            parameters: parameters,
+          }
+          return handler()
 
         # Make sure that the parsed JSON is also in the expected format, which
         # should be a standard reddit 'Listing'.
@@ -96,14 +117,19 @@ module.exports = class OAuth2
             return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
 
         else
-          message = 'No children found in parsed JSON response'
-          log.error {message, error, response, body, parameters}
-          return handler(false)
+          log.error {
+            message: 'No children found in parsed JSON response',
+            body: body,
+            parameters: parameters,
+          }
+          return handler()
 
       else
-        message = 'Unexpected status code for model request'
-        log.error {message, error, response, body, parameters}
-        return handler(false)
+        log.error {
+          message: 'Unexpected status code for model request',
+          response: response,
+        }
+        return handler()
 
 
   # Makes an authenticated request.
@@ -111,15 +137,23 @@ module.exports = class OAuth2
 
     # See https://github.com/reddit/reddit/wiki/API
     if not process.env.USER_AGENT
-      message = 'User agent is not defined'
-      log.error {messsage, parameters}
+      message =
+      log.error {
+        messsage: 'User agent is not defined',
+        parameters: parameters
+      }
       return handler()
 
     # Wrap token authentication around the request
     @authenticate (token) =>
 
       # Don't make the request if the token is not valid
-      return handler() if not token
+      if not token
+        log.error {
+          message: 'Access token is not set',
+          parameters: parameters
+        }
+        return handler()
 
       # User agent should be the only header we need to set for a API requests.
       parameters.headers =

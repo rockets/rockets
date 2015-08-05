@@ -38,7 +38,7 @@ module.exports = class Filter
         try
           return new RegExp((value.map (x) -> "(?:#{x})").join('|'), 'i')
 
-        # This indicates that a filter was provided but wasn't valid,
+        # This indicates that a contains filter was provided but wasn't valid,
         # which should fail validation.
         return false
 
