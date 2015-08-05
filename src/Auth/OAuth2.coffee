@@ -21,7 +21,7 @@ module.exports = class OAuth2
       return callback(@token)
 
     log.info {
-      event: 'auth',
+      event: 'authenticating',
     }
 
     options =
@@ -44,7 +44,7 @@ module.exports = class OAuth2
           message = 'Unexpected access token JSON response'
           log.error {message, error, response, body, exception}
       else
-        message = 'Unexpected status code when requesting access token'
+        message = 'Unexpected status code for access token request'
         log.error {message, error, response}
 
       callback(@token)
@@ -76,12 +76,6 @@ module.exports = class OAuth2
   models: (parameters, handler) ->
     @request parameters, (error, response, body) ->
 
-      # This is an important case because /by_id/ currently returns a 404 if
-      # a list of id's didn't produce any models. This response is considered
-      # a success, so just indicate that no models were found.
-      if response?.statusCode is 404
-        return handler([])
-
       # 200 is the only other success code.
       if response?.statusCode is 200
 
@@ -97,16 +91,18 @@ module.exports = class OAuth2
         if parsed.data and 'children' of parsed.data
 
           # reddit doesn't always send results in the right order. This will
-          # sort the models by ascending ID, ie. from olderst to newest.
+          # sort the models by ascending ID, ie. from oldest to newest.
           return handler parsed.data.children.sort (a, b) ->
             return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
 
         else
-          message = 'Children not found in parsed JSON response'
+          message = 'No children found in parsed JSON response'
           log.error {message, error, response, body, parameters}
           return handler(false)
 
       else
+        message = 'Unexpected status code for model request'
+        log.error {message, error, response, body, parameters}
         return handler(false)
 
 
@@ -115,12 +111,9 @@ module.exports = class OAuth2
 
     # See https://github.com/reddit/reddit/wiki/API
     if not process.env.USER_AGENT
-      return log.error 'User agent is not defined'
-
-    log.info {
-      event: 'request',
-      parameters: parameters,
-    }
+      message = 'User agent is not defined'
+      log.error {messsage, parameters}
+      return handler()
 
     # Wrap token authentication around the request
     @authenticate (token) =>

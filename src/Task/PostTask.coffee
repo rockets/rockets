@@ -32,8 +32,9 @@ module.exports = class PostTask extends Task
   forwardParameters: () ->
     fullnames = @fullnames(@latest + 1, Task.LIMIT)
 
-    url: "https://oauth.reddit.com/by_id/#{fullnames}"
+    url: 'https://oauth.reddit.com/api/info'
     qs:
+      id: fullnames       # Comma-separated list of post fullnames.
       limit: Task.LIMIT   # The maximum amount of results we'd like to receive.
       raw_json: 1         # We don't want the JSON data to be encoded.
 
@@ -43,9 +44,10 @@ module.exports = class PostTask extends Task
   # received models. Will only be called occasionally within the flow of a
   # 'reversed' model request.
   backlogParameters: (start, length) ->
-    fullnames = @fullnames(start, length)
+    fullnames = @fullnames(@latest + 1, Task.LIMIT)
 
-    url: "https://oauth.reddit.com/by_id/#{fullnames}"
+    url: 'https://oauth.reddit.com/api/info'
     qs:
-      limit: length   # The maximum amount of results we'd like to receive.
-      raw_json: 1     # We don't want the JSON data to be encoded.
+      id: fullnames       # Comma-separated list of post fullnames.
+      limit: Task.LIMIT   # The maximum amount of results we'd like to receive.
+      raw_json: 1         # We don't want the JSON data to be encoded.

@@ -3,37 +3,33 @@ Wraps around bunyan to create a consistent logging interface.
 ###
 module.exports = class Log
 
-  constructor: () ->
-    @loggers =
+  errorHandler: (error) ->
+    @error {
+      error: error or 'Unknown',
+      stack: error?.stack
+    }
 
-      # Info log
-      info: bunyan.createLogger({
-        name: 'rockets',
-        streams: [
-          {
-            level: 'info',
-            stream: process.stdout,
-          },
-        ]
-      })
 
-      # Error log
-      error: bunyan.createLogger({
-        name: 'rockets',
-        streams: [
-          {
-            level: 'error',
-            stream: process.stderr,
-          },
-        ]
-      })
+  # Bundle log data into a consistent format.
+  bundle: (data) ->
+
+    bundle = {
+      date: new Date().toLocaleDateString(),
+      time: new Date().toTimeString(),
+      data: data,
+    }
+
+    return JSON.stringify(bundle, null, 2)
 
 
   # Log arbitrary arguments to the info log
   info: () ->
-    @loggers.info.info arguments
+    console.info @bundle(arguments)
 
 
   # Log arbitrary arguments to the error log
   error: () ->
-    @loggers.error.error arguments
+    console.error @bundle(arguments)
+
+    # Also print a stack trace to stderr
+    console.trace()
