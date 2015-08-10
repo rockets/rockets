@@ -2,7 +2,7 @@
 ---
 
 **Mission**
->Provide a way for bots to continuously monitor new content on reddit.com without using the API.
+>Provide a way to stream new content on reddit.com without using the API.
 
 Many reddit bots rely on monitoring new content, constantly sending requests to keep up. Unfortunately this means that bots can't use their precious rate-limit tokens to then *do something* with that content.
 
@@ -10,18 +10,17 @@ Many reddit bots rely on monitoring new content, constantly sending requests to 
 
 You will receive JSON models exactly as they appear in reddit listings, ie. with `kind` and `data` keys. These will be sent one at a time, but are not guaranteed to be in perfect chronological order due to the level of concurrency on the server.
 
-## Demo
+#### Demo
 
-```bash
-git clone git@github.com:rtheunissen/rockets
-cd rockets
-npm install
-node client.js
-```
+See [rockets-demo](https://github.com/rtheunissen/rockets-demo).
 
-## Subscriptions
+#### Client
 
-Subscriptions are sent as JSON in the following format:
+See [rockets-client](https://github.com/rtheunissen/rockets-client).
+
+## Usage
+
+Subscriptions are sent to `ws://rockets.cc:3210` as JSON in the following format:
 
 ```js
 {
@@ -31,12 +30,13 @@ Subscriptions are sent as JSON in the following format:
     }
 }
 ```
-## Channels
+
+### Channels
 
 - `comments`
 - `posts`
 
-## Filters
+### Filters
 
 All filters can be provided as either a single value or an array of values.
 A filter is considered a match if any of the values match the corresponding value in the model.
@@ -62,8 +62,7 @@ A filter is considered a match if any of the values match the corresponding valu
 | url       | string          | Link's URL, or the post's permalink if it's a selfpost           |
 | nsfw      | boolean         | Flagged NSFW at the time of creation                             |
 
-
-## Example
+### Example
 
 ```js
 {
@@ -87,21 +86,21 @@ A filter is considered a match if any of the values match the corresponding valu
 
 ## Limitations
 
-#### Dropped connections
+### Dropped connections
 
 The server will drop all connections when being updated or restarted, which can't be avoided. Make sure that your client
 will attempt to reconnect automatically when a connection is dropped. Updates will be posted to /r/redditdev in the event
 of unexpected downtime.
 
-#### Latency
+### Latency
 
 Even though the command center is in low reddit orbit, there will always be some delay between a model's creation and its broadcast. Most of the time this delay will only be a few seconds, but could be several minutes in some cases. This occurs when reddit.com goes down, or during very busy periods. The command center will catch up again when things are back to normal or when busy periods subside. Data will not be lost during this time.
 
-#### Bandwidth
+### Bandwidth
 
 A single model is roughly 1kb of JSON. The command center receives an average of 30 models per second. This works out to about 2.6GB per day, per unfiltered connection. With a limit of 8TB downstream traffic per month, this equates to a maximum of roughly 100 concurrent unfiltered connections.
 
-#### Subscriptions
+### Subscriptions
 
 You are only allowed one subscription per connection per channel, where new subscriptions replace previous ones.
 It's possible that some unwanted models may still be received after a subscription has been replaced, so you should
