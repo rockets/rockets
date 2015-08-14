@@ -93,41 +93,46 @@ module.exports = class OAuth2
 
     @request parameters, (error, response, body) ->
 
-      if response?.statusCode is 200
-
-        # Attempt to parse the response JSON
-        try
-          parsed = JSON.parse(body)
-
-        catch exception
-          log.error {
-            message: 'Failed to parse JSON response',
-            body: body,
-            parameters: parameters,
-          }
-          return handler()
-
-        # Make sure that the parsed JSON is also in the expected format, which
-        # should be a standard reddit 'Listing'.
-        if parsed.data and 'children' of parsed.data
-
-          # reddit doesn't always send results in the right order. This will
-          # sort the models by ascending ID, ie. from oldest to newest.
-          return handler parsed.data.children.sort (a, b) ->
-            return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
-
-        else
-          log.error {
-            message: 'No children found in parsed JSON response',
-            body: body,
-            parameters: parameters,
-          }
-          return handler()
-
-      else
+      if response?.statusCode isnt 200
         log.error {
           message: 'Unexpected status code for model request',
           response: response,
+        }
+        return handler()
+
+      # Attempt to parse the response JSON
+      try
+        parsed = JSON.parse(body)
+
+      catch exception
+        log.error {
+          message: 'Failed to parse JSON response',
+          body: body,
+          parameters: parameters,
+        }
+        return handler()
+
+      # Make sure that the parsed JSON is also in the expected format, which
+      # should be a standard reddit 'Listing'.
+      if parsed.data and 'children' of parsed.data
+
+        # reddit doesn't always send results in the right order. This will
+        # sort the models by ascending ID, ie. from oldest to newest.
+        children = parsed.data.children.sort (a, b) ->
+          return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
+
+        log.info {
+          event: 'request.models.received',
+          count: children.length,
+        }
+
+        return handler(children)
+
+      else
+        log.error {
+          message: 'No children found in parsed JSON response',
+          body: body,
+          parameters: parameters,
         }
         return handler()
 
@@ -165,6 +170,12 @@ module.exports = class OAuth2
 
       # Schedule a request on the rate limit queue
       @rate.push (next) =>
+
+        log.info {
+          event: 'request',
+          parameters: parameters,
+        }
+
         request parameters, (error, response, body) =>
 
           # Set the rate limit allowance using the reddit rate-limit headers.

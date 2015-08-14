@@ -61,9 +61,6 @@ module.exports = class Task
   enqueue: (models) ->
     created = models[models.length - 1].data.created_utc
 
-    # Only enqueue models that weren't created before the process started.
-    if created < process.started then return
-
     log.info {
       event: 'models',
       kind: @fullnamePrefix(),
@@ -71,12 +68,24 @@ module.exports = class Task
       latency: Date.now() / 1000 - created
     }
 
-    @queue.push models
+    # Only enqueue models that weren't created before the process started.
+    if created + 1 > process.started then @queue.push models
 
 
   # Fetches models using given parameters then feeds them to a model processor.
   fetch: (parameters, processor, done) ->
+    log.info {
+      event: 'fetch',
+      parameters: parameters,
+    }
+
     @oauth.models parameters, (models) =>
+      log.info {
+        event: 'fetch.models.received',
+        count: models.length,
+        kind: @fullnamePrefix(),
+      }
+
       if models?.length > 0 then processor.call(@, models, done) else done()
 
 
@@ -102,7 +111,7 @@ module.exports = class Task
     parameters = @forwardParameters()
 
     log.info {
-      event: 'task.forward',
+      event: 'fetch.forward',
       kind: @fullnamePrefix(),
       parameters: parameters,
     }
@@ -115,7 +124,7 @@ module.exports = class Task
     parameters = @reversedParameters()
 
     log.info {
-      event: 'task.reversed',
+      event: 'fetch.reversed',
       kind: @fullnamePrefix(),
       parameters: parameters,
     }
@@ -126,7 +135,15 @@ module.exports = class Task
   # Processes the models from an initial request.
   # Sets the initial value of the most recently processed model.
   processInitial: (models, done) ->
-    @latest = @idToIndex(models[0].data.id)
+    latest = @idToIndex(models[0].data.id)
+
+    log.info {
+      event: 'process.initial',
+      latest: latest,
+      kind: @fullnamePrefix(),
+    }
+
+    @latest = latest
     @enqueue(models)
     return done()
 
@@ -135,14 +152,18 @@ module.exports = class Task
   # Sets the current value of the most recently processed model.
   processForward: (models, done) ->
 
+    # This is the newest of the new models
+    latest = @idToIndex(models[models.length - 1].data.id)
+
     log.info {
       event: 'process.forward',
       kind: @fullnamePrefix(),
       models: models.length,
+      latest: latest,
     }
 
     # Set the latest model as the last model in the received list.
-    @latest = @idToIndex(models[models.length - 1].data.id)
+    @latest = latest
 
     # Push models onto the model queue (processed one by one)
     @enqueue(models)
@@ -153,17 +174,18 @@ module.exports = class Task
   # Sets the current value of the most recently processed model.
   processReversed: (models, done) ->
 
+    # This is the newest of the new models
+    latest = @idToIndex(models[models.length - 1].data.id)
+
     log.info {
       event: 'process.reversed',
       kind: @fullnamePrefix(),
       models: models.length,
+      latest: latest,
     }
 
-    # This is the newest of the new models
-    newest = @idToIndex(models[models.length - 1].data.id)
-
     # Check if there actually is something new
-    if newest <= @latest
+    if latest <= @latest
       return done()
 
     # This is the base36 ID of the most recently processed model
@@ -175,11 +197,18 @@ module.exports = class Task
     for index, model of models
       if model.data.id is latestId
 
-        @latest = newest
+        @latest = latest
 
         # Slice only the newest models, starting from but excluding the most
         # recently processed model.
         @enqueue models[parseInt(index) + 1...]
+
+        log.info {
+          event: 'process.reversed.found',
+          kind: @fullnamePrefix(),
+          latest: latest,
+        }
+
         return done()
 
     # We couldn't find the most recently processed model in the list of new
@@ -192,7 +221,7 @@ module.exports = class Task
     # processed model, and ending on the model right before the oldest of the
     # new models.
     @fetchBacklog @latest + 1, oldest - 1, (backlog) =>
-      @latest = newest
+      @latest = latest
 
       # Append the models models to the back of the backlog models
       @enqueue backlog.concat(models)
@@ -204,7 +233,7 @@ module.exports = class Task
   fetchBacklog: (start, end, done) ->
 
     log.info {
-      event: 'request.backlog',
+      event: 'fetch.backlog',
       kind: @fullnamePrefix(),
       start: start,
       end: end,
@@ -212,20 +241,59 @@ module.exports = class Task
 
     backlog = []
 
+    # Used to check if we're done scanning the backlog
+    pending = () ->
+      log.info {
+        event: 'fetch.backlog.check',
+        kind: @fullnamePrefix(),
+        start: start,
+        end: end,
+      }
+
+      start < end
+
+    # Called when we're done scanning the backlog
+    finish: () ->
+      log.info {
+        event: 'fetch.backlog.done',
+        kind: @fullnamePrefix(),
+        count: backlog.length,
+      }
+
+      return done(backlog)
+
     # Fetch task
     fetch = (callback) =>
-      length = Math.min(Task.LIMIT, end - start)
+      range = Math.min(Task.LIMIT, end - start)
 
-      @oauth.models @backlogParameters(start, length), (models) ->
+      log.info {
+        event: 'fetch.backlog.progress',
+        kind: @fullnamePrefix(),
+        start: start,
+        end: end,
+        range: range,
+      }
+
+      @oauth.models @backlogParameters(start, range), (models) ->
         if models
           backlog = backlog.concat(models)
+
+          log.info {
+            event: 'fetch.backlog.received',
+            count: models.length,
+            total: backlog.length,
+          }
 
           # Move the start pointer forward. It's important that we don't update
           # this using the number of models, because there may be gaps in the
           # response which could result in a deadlock or missing data.
-          start += length
+          start += range
+
+        log.info {
+          event: 'fetch.backlog.callback',
+        }
 
         callback()
 
     # While there is a backlog, fetch, then call done with the models.
-    async.whilst (() -> start < end), fetch, (() -> done(backlog))
+    async.whilst pending, fetch, finish

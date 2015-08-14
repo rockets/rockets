@@ -18,7 +18,14 @@ module.exports = class RateLimitQueue extends Queue
 
   # Delay and process a task in the queue
   process: (task, next) ->
-    setTimeout (() => @tick() and task(next)), @getDelay()
+    delay = @getDelay()
+
+    log.info {
+      event: 'rate.delay',
+      delay: delay,
+    }
+
+    setTimeout (() => @tick() and task(next)), delay
 
 
   # Returns the amount of time to delay the current task by, 0 ~ 1000ms
@@ -29,4 +36,4 @@ module.exports = class RateLimitQueue extends Queue
  # Sets the allowed task schedule rate.
  # Allowed to process a number of 'tasks' within a given number of 'seconds'.
   setRate: (tasks, seconds) ->
-    @rate = tasks / seconds
+    @rate = if seconds > 0 then tasks / seconds else 1
