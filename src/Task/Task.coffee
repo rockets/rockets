@@ -242,7 +242,7 @@ module.exports = class Task
     backlog = []
 
     # Used to check if we're done scanning the backlog
-    pending = () ->
+    pending = () =>
       log.info {
         event: 'fetch.backlog.check',
         kind: @fullnamePrefix(),
@@ -253,7 +253,7 @@ module.exports = class Task
       start < end
 
     # Called when we're done scanning the backlog
-    finish = () ->
+    finish = () =>
       log.info {
         event: 'fetch.backlog.done',
         kind: @fullnamePrefix(),
