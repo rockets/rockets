@@ -82,7 +82,7 @@ module.exports = class Task
     @oauth.models parameters, (models) =>
       log.info {
         event: 'fetch.models.received',
-        count: models.length,
+        count: models?.length,
         kind: @fullnamePrefix(),
       }
 
@@ -253,7 +253,7 @@ module.exports = class Task
       start < end
 
     # Called when we're done scanning the backlog
-    finish: () ->
+    finish = () ->
       log.info {
         event: 'fetch.backlog.done',
         kind: @fullnamePrefix(),
