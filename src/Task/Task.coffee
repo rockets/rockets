@@ -68,8 +68,7 @@ module.exports = class Task
       latency: Date.now() / 1000 - created
     }
 
-    # Only enqueue models that weren't created before the process started.
-    if created + 1 > process.started then @queue.push models
+    @queue.push models
 
 
   # Fetches models using given parameters then feeds them to a model processor.
