@@ -16,7 +16,7 @@ module.exports = class Log
     return JSON.stringify {
       date: new Date().toLocaleDateString(),
       time: new Date().toTimeString(),
-      data: data,
+      data: if data.length is 1 then data[0] else data,
     }
 
 

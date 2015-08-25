@@ -68,8 +68,7 @@ module.exports = class Task
       latency: Date.now() / 1000 - created
     }
 
-    # Only enqueue models that weren't created before the process started.
-    if created + 1 > process.started then @queue.push models
+    @queue.push models
 
 
   # Fetches models using given parameters then feeds them to a model processor.
@@ -82,7 +81,7 @@ module.exports = class Task
     @oauth.models parameters, (models) =>
       log.info {
         event: 'fetch.models.received',
-        count: models.length,
+        count: models?.length,
         kind: @fullnamePrefix(),
       }
 
@@ -242,7 +241,7 @@ module.exports = class Task
     backlog = []
 
     # Used to check if we're done scanning the backlog
-    pending = () ->
+    pending = () =>
       log.info {
         event: 'fetch.backlog.check',
         kind: @fullnamePrefix(),
@@ -253,7 +252,7 @@ module.exports = class Task
       start < end
 
     # Called when we're done scanning the backlog
-    finish: () ->
+    finish = () =>
       log.info {
         event: 'fetch.backlog.done',
         kind: @fullnamePrefix(),
