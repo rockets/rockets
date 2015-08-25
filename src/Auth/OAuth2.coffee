@@ -61,27 +61,6 @@ module.exports = class OAuth2
       callback(@token)
 
 
-  # Attempts to set the allowed rate limit using a response
-  setRateLimit: (response) ->
-    if response?.headers
-      try
-
-        messages = response.headers['x-ratelimit-remaining']
-        seconds  = response.headers['x-ratelimit-reset']
-
-        @rate.setRate(messages, seconds)
-
-        log.info {
-          event: 'ratelimit',
-          messages: messages,
-          seconds: seconds,
-        }
-
-      catch exception
-        message = 'Failed to set rate limit'
-        log.error {message, response, exception}
-
-
   # Requests models from reddit.com using given request parameters.
   # Passes models to a handler or `false` if the request was unsuccessful.
   models: (parameters, handler) ->
@@ -137,6 +116,26 @@ module.exports = class OAuth2
         return handler()
 
 
+  # Attempts to set the allowed rate limit using a response
+  setRateLimit: (response) ->
+    if response?.headers
+      try
+        messages = response.headers['x-ratelimit-remaining']
+        seconds  = response.headers['x-ratelimit-reset']
+
+        @rate.setRate(messages, seconds)
+
+        log.info {
+          event: 'ratelimit',
+          messages: messages,
+          seconds: seconds,
+        }
+
+      catch exception
+        message = 'Failed to set rate limit'
+        log.error {message, response, exception}
+
+
   # Makes an authenticated request.
   request: (parameters, handler) ->
 
@@ -147,6 +146,7 @@ module.exports = class OAuth2
         messsage: 'User agent is not defined',
         parameters: parameters
       }
+
       return handler()
 
     # Wrap token authentication around the request
@@ -158,6 +158,7 @@ module.exports = class OAuth2
           message: 'Access token is not set',
           parameters: parameters
         }
+
         return handler()
 
       # User agent should be the only header we need to set for a API requests.
@@ -178,9 +179,47 @@ module.exports = class OAuth2
 
         request parameters, (error, response, body) =>
 
+          log.info {
+            event: 'ratelimit.set.before',
+            headers: response?.headers,
+          }
+
           # Set the rate limit allowance using the reddit rate-limit headers.
           # See https://www.reddit.com/1yxrp7
           @setRateLimit(response)
 
-          handler(error, response, body)
-          next()
+          log.info {
+            event: 'ratelimit.set.after',
+            headers: response?.headers,
+          }
+
+          # Trying to determine where we're stalling
+          log.info {
+            event: 'request.call.handler',
+            headers: response?.headers,
+          }
+
+          try
+            handler(error, response, body)
+
+            # Trying to determine where we're stalling
+            log.info {
+              event: 'request.return.handler',
+              headers: response?.headers,
+            }
+
+          catch exception
+            log.error {
+              message: 'Something went wrong during response handling',
+              exception: exception
+            }
+
+          finally
+
+            # Trying to determine where we're stalling
+            log.info {
+              event: 'request.next',
+              headers: response?.headers,
+            }
+
+            next()

@@ -22,7 +22,7 @@ module.exports = class RateLimitQueue extends Queue
 
     log.info {
       event: 'rate.delay',
-      delay: delay,
+      delay: "#{delay}ms",
     }
 
     setTimeout (() => @tick() and task(next)), delay
