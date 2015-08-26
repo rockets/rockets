@@ -215,12 +215,6 @@ module.exports = class OAuth2
           parameters: parameters
         }
 
-      finally
-        # Trying to determine where we're stalling
-        log.info {
-          event: 'request.failed.next'
-        }
-
         next()
 
 
