@@ -21,7 +21,7 @@ module.exports = class OAuth2
       return callback(@token)
 
     log.info {
-      event: 'token.request',
+      event: 'token.request'
     }
 
     options =
@@ -42,20 +42,20 @@ module.exports = class OAuth2
           @token = new AccessToken JSON.parse(body)
 
           log.info {
-            event: 'token.created',
-            token: @token.access_token,
+            event: 'token.created'
+            token: @token.access_token
           }
 
         catch exception
           log.error {
-            message: 'Unexpected access token JSON response',
-            response: response
+            message: 'Unexpected access token JSON response'
+            body: body
           }
 
       else
         log.error {
-          message: 'Unexpected status code for access token request',
-          response: response
+          message: 'Unexpected status code for access token request'
+          status: response?.statusCode
         }
 
       callback(@token)
@@ -66,17 +66,18 @@ module.exports = class OAuth2
   models: (parameters, handler) ->
 
     log.info {
-      event: 'request.models',
-      parameters: parameters,
+      event: 'request.models'
+      parameters: parameters
     }
 
-    @request parameters, (error, response, body) ->
+    @authenticatedRequest parameters, (error, response, body) ->
 
       if response?.statusCode isnt 200
         log.error {
-          message: 'Unexpected status code for model request',
-          response: response,
+          message: 'Unexpected status code for model request'
+          status: response?.statusCode
         }
+
         return handler()
 
       # Attempt to parse the response JSON
@@ -85,10 +86,10 @@ module.exports = class OAuth2
 
       catch exception
         log.error {
-          message: 'Failed to parse JSON response',
-          body: body,
-          parameters: parameters,
+          message: 'Failed to parse JSON response'
+          body: body
         }
+
         return handler()
 
       # Make sure that the parsed JSON is also in the expected format, which
@@ -101,18 +102,17 @@ module.exports = class OAuth2
           return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
 
         log.info {
-          event: 'request.models.received',
-          count: children.length,
+          event: 'request.models.received'
+          count: children.length
         }
 
         return handler(children)
 
       else
         log.error {
-          message: 'No children found in parsed JSON response',
-          body: body,
-          parameters: parameters,
+          message: 'No children found in parsed JSON response'
         }
+
         return handler()
 
 
@@ -126,24 +126,113 @@ module.exports = class OAuth2
         @rate.setRate(messages, seconds)
 
         log.info {
-          event: 'ratelimit',
-          messages: messages,
-          seconds: seconds,
+          event: 'ratelimit'
+          messages: messages
+          seconds: seconds
         }
 
       catch exception
         message = 'Failed to set rate limit'
-        log.error {message, response, exception}
+
+        log.error {
+          message: 'Failed to set rate limit'
+          headers: response.headers
+          exception: exception
+        }
+
+
+  # Adds a new request to the rate limit queue, where handler expects parameters
+  # error, response, and body.
+  enqueueRequest: (parameters, handler) ->
+
+    # Schedule a request on the rate limit queue
+    @rate.push (next) =>
+
+      log.info {
+        event: 'request'
+        parameters: parameters
+      }
+
+      try
+        return request parameters, (error, response, body) =>
+
+          log.info {
+            event: 'ratelimit.set.before'
+            headers: response?.headers
+          }
+
+          # Set the rate limit allowance using the reddit rate-limit headers.
+          # See https://www.reddit.com/1yxrp7
+          @setRateLimit(response)
+
+          log.info {
+            event: 'ratelimit.set.after'
+            headers: response?.headers
+          }
+
+          # Trying to determine where we're stalling
+          log.info {
+            event: 'request.try.handler'
+            headers: response?.headers
+          }
+
+          try
+
+             # Trying to determine where we're stalling
+            log.info {
+              event: 'request.call.handler'
+              headers: response?.headers
+            }
+
+            handler(error, response, body)
+
+            # Trying to determine where we're stalling
+            log.info {
+              event: 'request.after.handler'
+              headers: response?.headers
+            }
+
+          catch exception
+            log.error {
+              message: 'Something went wrong during response handling'
+              exception: exception
+              response: response
+            }
+
+          finally
+
+            # Trying to determine where we're stalling
+            log.info {
+              event: 'request.next'
+            }
+
+            next()
+
+      catch exception
+        log.error {
+          message: 'Something went wrong during request'
+          exception: exception
+          parameters: parameters
+        }
+
+      finally
+        # Trying to determine where we're stalling
+        log.info {
+          event: 'request.failed.next'
+        }
+
+        next()
+
 
 
   # Makes an authenticated request.
-  request: (parameters, handler) ->
+  authenticatedRequest: (parameters, handler) ->
 
     # See https://github.com/reddit/reddit/wiki/API
     if not process.env.USER_AGENT
       message =
       log.error {
-        messsage: 'User agent is not defined',
+        messsage: 'User agent is not defined'
         parameters: parameters
       }
 
@@ -155,7 +244,7 @@ module.exports = class OAuth2
       # Don't make the request if the token is not valid
       if not token
         log.error {
-          message: 'Access token is not set',
+          message: 'Access token is not set'
           parameters: parameters
         }
 
@@ -169,57 +258,4 @@ module.exports = class OAuth2
       parameters.auth =
         bearer: @token.token
 
-      # Schedule a request on the rate limit queue
-      @rate.push (next) =>
-
-        log.info {
-          event: 'request',
-          parameters: parameters,
-        }
-
-        request parameters, (error, response, body) =>
-
-          log.info {
-            event: 'ratelimit.set.before',
-            headers: response?.headers,
-          }
-
-          # Set the rate limit allowance using the reddit rate-limit headers.
-          # See https://www.reddit.com/1yxrp7
-          @setRateLimit(response)
-
-          log.info {
-            event: 'ratelimit.set.after',
-            headers: response?.headers,
-          }
-
-          # Trying to determine where we're stalling
-          log.info {
-            event: 'request.call.handler',
-            headers: response?.headers,
-          }
-
-          try
-            handler(error, response, body)
-
-            # Trying to determine where we're stalling
-            log.info {
-              event: 'request.return.handler',
-              headers: response?.headers,
-            }
-
-          catch exception
-            log.error {
-              message: 'Something went wrong during response handling',
-              exception: exception
-            }
-
-          finally
-
-            # Trying to determine where we're stalling
-            log.info {
-              event: 'request.next',
-              headers: response?.headers,
-            }
-
-            next()
+      @enqueueRequest(parameters, handler)

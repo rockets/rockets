@@ -21,19 +21,40 @@ module.exports = class RateLimitQueue extends Queue
     delay = @getDelay()
 
     log.info {
-      event: 'rate.delay',
-      delay: "#{delay}ms",
+      event: 'ratelimit.delay'
+      delay: "#{delay}ms"
     }
 
-    setTimeout (() => @tick() and task(next)), delay
+    setTimeout (() => @tick() and task(next)), delay or 1
 
 
   # Returns the amount of time to delay the current task by, 0 ~ 1000ms
   getDelay: () ->
-    return Math.max(0, 1000 - (Date.now() - @last)) if @rate <= 1
+
+    delay = Math.max(0, 1000 - (Date.now() - @last)) if @rate <= 1
+
+    log.info {
+      event: 'ratelimit.getdelay'
+      last: @last
+      rate: @rate
+      this: @
+      delay: delay
+    }
+
+    return delay
 
 
  # Sets the allowed task schedule rate.
  # Allowed to process a number of 'tasks' within a given number of 'seconds'.
   setRate: (tasks, seconds) ->
-    @rate = if seconds > 0 then tasks / seconds else 1
+
+    rate = if seconds > 0 then tasks / seconds else 1
+
+    log.info {
+      event: 'ratelimit.set'
+      tasks: tasks
+      seconds: seconds
+      rate: rate
+    }
+
+    @rate = rate
