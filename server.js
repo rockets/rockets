@@ -8,6 +8,9 @@ request = require('request');
 uuid    = require('uuid');
 bunyan  = require('bunyan');
 
+// Not sure what this does but it's worth a shot.
+request.debug = true;
+
 // Allows us to `require` .coffee files
 require('coffee-script').register();
 

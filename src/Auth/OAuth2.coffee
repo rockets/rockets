@@ -156,6 +156,15 @@ module.exports = class OAuth2
       try
         return request parameters, (error, response, body) =>
 
+
+          if error
+            log.error {
+              message: 'Unexpected request error'
+              status: response?.statusCode
+              error: error
+            }
+
+
           log.info {
             event: 'ratelimit.set.before'
             headers: response?.headers
