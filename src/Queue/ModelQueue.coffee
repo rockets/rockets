@@ -8,15 +8,13 @@ module.exports = class ModelQueue extends Queue
   process: (model, next) ->
 
     # Exclude deleted models entirely.
-    if model.data.author?.toLowerCase() in ['[deleted]', '[removed]']
-      return next()
+    if model.data.author?.toLowerCase() not in ['[deleted]', '[removed]']
+      switch model.kind
+        when 't1' then channel = 'comments'
+        when 't3' then channel = 'posts'
 
-    switch model.kind
-      when 't1' then channel = 'comments'
-      when 't3' then channel = 'posts'
-
-    if channel
-      for id, worker of cluster.workers
-        worker.send {channel, model}
+      if channel
+        for id, worker of cluster.workers
+          worker.send {channel, model}
 
     next()

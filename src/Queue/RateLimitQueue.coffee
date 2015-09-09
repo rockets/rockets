@@ -13,11 +13,14 @@ module.exports = class RateLimitQueue extends Queue
 
   # Sets the time of the most recent task's initiation as the current time.
   tick: () ->
+    log.info {event: 'ratelimit.queue.tick'}
     @last = Date.now()
 
 
   # Delay and process a task in the queue
   process: (task, next) ->
+    log.info {event: 'ratelimit.queue.process'}
+
     delay = @getDelay()
 
     log.info {
@@ -25,7 +28,14 @@ module.exports = class RateLimitQueue extends Queue
       delay: "#{delay}ms"
     }
 
-    setTimeout (() => @tick() and task(next)), delay or 1
+    _process = () =>
+      log.info {event: 'ratelimit.queue._process.init'}
+      @tick()
+      log.info {event: 'ratelimit.queue._process.internal'}
+      task(next)  # Pass the callback to the task
+      log.info {event: 'ratelimit.queue._process.return'}
+
+    setTimeout _process, delay or 1
 
 
   # Returns the amount of time to delay the current task by, 0 ~ 1000ms
@@ -37,7 +47,6 @@ module.exports = class RateLimitQueue extends Queue
       event: 'ratelimit.getdelay'
       last: @last
       rate: @rate
-      this: @
       delay: delay
     }
 
@@ -47,7 +56,6 @@ module.exports = class RateLimitQueue extends Queue
  # Sets the allowed task schedule rate.
  # Allowed to process a number of 'tasks' within a given number of 'seconds'.
   setRate: (tasks, seconds) ->
-
     rate = if seconds > 0 then tasks / seconds else 1
 
     log.info {
