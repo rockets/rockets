@@ -8,25 +8,22 @@ module.exports = class Log
 
       #
       transports: [
-        # new (winston.transports.Console)({
-        #   name:             'console'
-        #   handleExceptions: true
-        #   json:             true
-        #   level:            'verbose'
-        # }),
+        new (winston.transports.Console)({
+          name:             'console'
+          level:            'verbose'
+          handleExceptions: true
+        }),
         new (winston.transports.File)({
           name:             'info'
           filename:         'info.log'
           level:            'info'
           handleExceptions: true
-          json:             true
         }),
         new (winston.transports.File)({
           name:             'error'
           filename:         'error.log'
           level:            'error'
           handleExceptions: true
-          json:             true
         })
       ],
 
