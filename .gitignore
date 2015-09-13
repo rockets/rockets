@@ -1,5 +1,5 @@
 .DS_Store
 .env
 node_modules
-info.log
-error.log
+logs
+*.log

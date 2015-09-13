@@ -9,32 +9,38 @@ module.exports = class Log
       #
       transports: [
         new (winston.transports.Console)({
-          name:             'console'
-          level:            'verbose'
-          handleExceptions: true
+          level:            'debug'
+          prettyPrint:      true
         }),
         new (winston.transports.File)({
           name:             'info'
-          filename:         'info.log'
+          filename:         'logs/info.log'
           level:            'info'
-          handleExceptions: true
+          prettyPrint:      true
         }),
         new (winston.transports.File)({
           name:             'error'
-          filename:         'error.log'
+          filename:         'logs/error.log'
           level:            'error'
+          prettyPrint:      true
           handleExceptions: true
-        })
+        }),
+        new (winston.transports.File)({
+          name:             'all'
+          filename:         'logs/all.log'
+          level:            'debug'
+          prettyPrint:      true
+          handleExceptions: true
+        }),
       ],
 
       #
       exitOnError: false
     }
 
-
   # Bundle log data into a consistent format.
   bundle: (data) ->
-    return JSON.stringify {
+    return {
       date: new Date().toLocaleDateString(),
       time: new Date().toTimeString(),
       data: if data.length is 1 then data[0] else data,
@@ -43,12 +49,12 @@ module.exports = class Log
 
   # Log arbitrary arguments to the info log
   info: () ->
-    @logger.info @bundle(arguments)
+    @logger.log 'info', @bundle(arguments)
 
 
   # Log arbitrary arguments to the error log
   error: () ->
-    @logger.error @bundle(arguments)
+    @logger.log 'error', @bundle(arguments)
 
     # Also print a stack trace to stderr
-    # console.trace()
+    console.trace()

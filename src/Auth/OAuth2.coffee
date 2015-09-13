@@ -31,7 +31,7 @@ module.exports = class OAuth2
         user: process.env.CLIENT_ID
         pass: process.env.CLIENT_SECRET
       form:
-        grant_type: 'password'
+        grant_type: 'client_credentials'
         username: process.env.USERNAME
         password: process.env.PASSWORD
 
