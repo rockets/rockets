@@ -41,7 +41,11 @@ module.exports = class SocketServer
     socket.on 'close', () =>
       @onDisconnect(client)
 
-    socket.on 'error', Log.errorHandler
+    socket.on 'error', (err) ->
+      log.error {
+        error: err or 'Unknown',
+        stack: err?.stack
+      }
 
 
   # Called when the connection to a client is lost.

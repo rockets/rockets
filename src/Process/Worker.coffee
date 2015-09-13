@@ -7,8 +7,6 @@ module.exports = class Worker
 
   constructor: () ->
     @server = new SocketServer()
-    @queue  = new EmitQueue()
-
     @run()
 
   # Starts the server and handling of incoming messages from the master process.
@@ -25,8 +23,8 @@ module.exports = class Worker
 
 
   # Sends a task to the emit queue which will send the model to the client.
-  enqueue: (client, model) ->
-    @queue.push {client, model}
+  # enqueue: (client, model) ->
+  #   @queue.push {client, model}
 
 
   # Loops through all subscriptions in a given channel, checking if the
@@ -35,8 +33,8 @@ module.exports = class Worker
   sendToChannel: (channel, model) ->
     for clientId, subscription of channel.subscriptions or []
       if subscription.match model
-        @enqueue subscription.client, model
-
+        subscription.client.send(model)
+        # @enqueue subscription.client, model
 
   # Handles a message received from the model queue, which contains a 'channel'
   # and a 'model'. Sends the model to all matching subscriptions in the channel.

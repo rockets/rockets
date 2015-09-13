@@ -3,11 +3,18 @@ Wraps around bunyan to create a consistent logging interface.
 ###
 module.exports = class Log
 
-  # Static error handler
-  @errorHandler = (err) ->
-    log.error {
-      error: err or 'Unknown',
-      stack: err?.stack
+  constructor: () ->
+    @logger = new winston.Logger {
+
+      #
+      transports: [
+        new winston.transports.Console
+        handleExceptions: true
+        json: true
+      ],
+
+      #
+      exitOnError: false
     }
 
 
@@ -22,12 +29,12 @@ module.exports = class Log
 
   # Log arbitrary arguments to the info log
   info: () ->
-    console.info @bundle(arguments)
+    @logger.info @bundle(arguments)
 
 
   # Log arbitrary arguments to the error log
   error: () ->
-    console.error @bundle(arguments)
+    @logger.error @bundle(arguments)
 
     # Also print a stack trace to stderr
-    console.trace()
+    # console.trace()

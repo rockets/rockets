@@ -20,7 +20,7 @@ module.exports = -> @[name] = require("./#{path}") for name, path of {
   Master             : 'Process/Master'
 
   Queue              : 'Queue/Queue'
-  EmitQueue          : 'Queue/EmitQueue'
+  # EmitQueue          : 'Queue/EmitQueue'
   ModelQueue         : 'Queue/ModelQueue'
   RateLimiter        : 'Queue/RateLimitQueue'
 

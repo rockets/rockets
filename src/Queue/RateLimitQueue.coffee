@@ -32,7 +32,7 @@ module.exports = class RateLimitQueue extends Queue
       log.info {event: 'ratelimit.queue._process.init'}
       @tick()
       log.info {event: 'ratelimit.queue._process.internal'}
-      task(next)  # Pass the callback to the task
+      task(next)
       log.info {event: 'ratelimit.queue._process.return'}
 
     setTimeout _process, delay or 1

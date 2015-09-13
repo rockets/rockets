@@ -59,13 +59,11 @@ module.exports = class Task
 
   # Pushes models onto the model queue.
   enqueue: (models) ->
-    created = models[models.length - 1].data.created_utc
-
     log.info {
       event: 'models',
       kind: @fullnamePrefix(),
       count: models.length,
-      latency: Date.now() / 1000 - created
+      latency: Date.now() / 1000 - models[models.length - 1].data.created_utc
     }
 
     @queue.push models

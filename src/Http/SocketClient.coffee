@@ -16,4 +16,4 @@ module.exports = class SocketClient
 
     # Only send if the socket connection is still open
     if @socket?.readyState is ws.OPEN
-      @socket.send data, log.errorHandler
+      @socket.send data

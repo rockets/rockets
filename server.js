@@ -6,10 +6,10 @@ ws      = require('ws');
 async   = require('async');
 request = require('request');
 uuid    = require('uuid');
-bunyan  = require('bunyan');
+winston = require('winston');
 
 // Not sure what this does but it's worth a shot.
-request.debug = true;
+request.debug = false;
 
 // Allows us to `require` .coffee files
 require('coffee-script').register();
