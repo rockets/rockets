@@ -20,5 +20,13 @@ require('./src')();
 // Global log
 log = new Log();
 
+//
+process.on('uncaughtException', function (err) {
+  log.error({
+    message: 'uncaughtException',
+    err: err,
+  });
+});
+
 // Create a new master process if master or create a worker if it's a fork.
 cluster.isMaster ? new Master() : new Worker();
