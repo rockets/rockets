@@ -20,5 +20,8 @@ require('./src')();
 // Global log
 log = new Log();
 
+$master = new Master();
+$worker = new Worker();
+
 // Create a new master process if master or create a worker if it's a fork.
-cluster.isMaster ? new Master() : new Worker();
+// cluster.isMaster ? new Master() : new Worker();

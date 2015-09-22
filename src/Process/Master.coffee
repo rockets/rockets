@@ -6,13 +6,13 @@ Master process, responsible for:
 module.exports = class Master
 
   constructor: () ->
-    @fork()
+    # @fork()
     @run()
 
 
   # Fork workers, which will each create a `Worker` process.
-  fork: () ->
-    cluster.fork() for _ in [0...(os.cpus().length-1)]
+  # fork: () ->
+    # cluster.fork() for _ in [0...(os.cpus().length-1)]
 
 
   # Returns an array of model fetch tasks to run
