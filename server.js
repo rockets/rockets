@@ -20,6 +20,14 @@ require('./src')();
 // Global log
 log = new Log();
 
+//
+process.on('uncaughtException', function (err) {
+  log.error({
+    message: 'uncaughtException',
+    err: err,
+  });
+});
+
 $master = new Master();
 $worker = new Worker();
 

@@ -14,6 +14,14 @@ module.exports = class Master
   # fork: () ->
     # cluster.fork() for _ in [0...(os.cpus().length-1)]
 
+    cluster.on 'exit', (worker, code, signal) ->
+        log.error {
+            message: 'Worker has died. Restarting...',
+        }
+
+        # Fork again because the worker died.
+        cluster.fork()
+
 
   # Returns an array of model fetch tasks to run
   run: () ->

@@ -87,6 +87,7 @@ module.exports = class OAuth2
       catch exception
         log.error {
           message: 'Failed to parse JSON response'
+          exception: exception,
           body: body
         }
 
