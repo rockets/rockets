@@ -2,11 +2,9 @@
 Rate limiter, responsible for:
   - Delaying request tasks to maintain a 1:1 request / second rate.
 ###
-module.exports = class RateLimitQueue extends Queue
+module.exports = class RateLimiter
 
   constructor: () ->
-    super()
-
     @last = 0  # The time, in milliseconds, when the last task was initiated.
     @rate = 0  # The rate at which tasks may be scheduled.
 
@@ -17,9 +15,8 @@ module.exports = class RateLimitQueue extends Queue
     @last = Date.now()
 
 
-  # Delay and process a task in the queue
-  process: (task, next) ->
-    log.info {event: 'ratelimit.queue.process'}
+  delay: (task) ->
+    log.info {event: 'ratelimit.task'}
 
     delay = @getDelay()
 
@@ -28,14 +25,9 @@ module.exports = class RateLimitQueue extends Queue
       delay: "#{delay}ms"
     }
 
-    _process = () =>
-      log.info {event: 'ratelimit.queue._process.init'}
-      @tick()
-      log.info {event: 'ratelimit.queue._process.internal'}
-      task(next)
-      log.info {event: 'ratelimit.queue._process.return'}
+    @last = Date.now()
 
-    setTimeout _process, delay or 1
+    setTimeout task, delay or 1
 
 
   # Returns the amount of time to delay the current task by, 0 ~ 1000ms

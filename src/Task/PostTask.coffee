@@ -13,7 +13,7 @@ module.exports = class PostTask extends Task
   # point from which to generate fullnames.
   initialParameters: () ->
     url: 'https://oauth.reddit.com/r/all/new'
-    qs:
+    query:
       limit: 1      # We only need a single model to determine the initial ID.
       raw_json: 1   # We don't want the JSON data to be encoded.
 
@@ -22,7 +22,7 @@ module.exports = class PostTask extends Task
   # These are used to fetch the newest models on reddit.com
   reversedParameters: () ->
     url: 'https://oauth.reddit.com/r/all/new'
-    qs:
+    query:
       limit: Task.LIMIT   # The maximum amount of results we'd like to receive.
       raw_json: 1         # We don't want the JSON data to be encoded.
 
@@ -33,7 +33,7 @@ module.exports = class PostTask extends Task
     fullnames = @fullnames(@latest + 1, Task.LIMIT)
 
     url: 'https://oauth.reddit.com/api/info'
-    qs:
+    query:
       id: fullnames       # Comma-separated list of post fullnames.
       limit: Task.LIMIT   # The maximum amount of results we'd like to receive.
       raw_json: 1         # We don't want the JSON data to be encoded.
@@ -47,7 +47,7 @@ module.exports = class PostTask extends Task
     fullnames = @fullnames(start, length)
 
     url: 'https://oauth.reddit.com/api/info'
-    qs:
+    query:
       id: fullnames       # Comma-separated list of post fullnames.
       limit: Task.LIMIT   # The maximum amount of results we'd like to receive.
       raw_json: 1         # We don't want the JSON data to be encoded.

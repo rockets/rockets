@@ -15,14 +15,14 @@ module.exports = -> @[name] = require("./#{path}") for name, path of {
 
   AccessToken        : 'Auth/AccessToken'
   OAuth2             : 'Auth/OAuth2'
+  RateLimiter        : 'Auth/RateLimiter'
 
   Worker             : 'Process/Worker'
   Master             : 'Process/Master'
 
   Queue              : 'Queue/Queue'
-  # EmitQueue          : 'Queue/EmitQueue'
+  EmitQueue          : 'Queue/EmitQueue'
   ModelQueue         : 'Queue/ModelQueue'
-  RateLimiter        : 'Queue/RateLimitQueue'
 
   Task               : 'Task/Task'
   CommentTask        : 'Task/CommentTask'

@@ -6,13 +6,13 @@ Master process, responsible for:
 module.exports = class Master
 
   constructor: () ->
-    # @fork()
+    @fork()
     @run()
 
 
   # Fork workers, which will each create a `Worker` process.
-  # fork: () ->
-    # cluster.fork() for _ in [0...(os.cpus().length-1)]
+  fork: () ->
+    cluster.fork() for _ in [0...(os.cpus().length-1)]
 
     cluster.on 'exit', (worker, code, signal) ->
         log.error {
@@ -36,9 +36,9 @@ module.exports = class Master
 
     for _ in [0...20]
       tasks.push comments.reversed()
-      tasks.push posts.forward()
+      # tasks.push posts.forward()
 
-    tasks.push posts.reversed()
+    # tasks.push posts.reversed()
 
     # Run all tasks in series, forever.
     async.forever (next) ->

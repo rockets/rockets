@@ -4,12 +4,12 @@ cluster = require('cluster');
 os      = require('os');
 ws      = require('ws');
 async   = require('async');
-request = require('request');
 uuid    = require('uuid');
 winston = require('winston');
+restler = require('restler');
 
-// Not sure what this does but it's worth a shot.
-request.debug = false;
+querystring = require('querystring');
+http = require('http');
 
 // Allows us to `require` .coffee files
 require('coffee-script').register();
@@ -21,15 +21,12 @@ require('./src')();
 log = new Log();
 
 //
-process.on('uncaughtException', function (err) {
-  log.error({
-    message: 'uncaughtException',
-    err: err,
-  });
-});
-
-$master = new Master();
-$worker = new Worker();
+// process.on('uncaughtException', function (err) {
+//   log.error({
+//     message: 'uncaughtException',
+//     err: err,
+//   });
+// });
 
 // Create a new master process if master or create a worker if it's a fork.
-// cluster.isMaster ? new Master() : new Worker();
+cluster.isMaster ? new Master() : new Worker();

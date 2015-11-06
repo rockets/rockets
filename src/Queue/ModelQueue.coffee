@@ -13,11 +13,11 @@ module.exports = class ModelQueue extends Queue
         when 't1' then channel = 'comments'
         when 't3' then channel = 'posts'
 
-      # if channel
-        # for id, worker of cluster.workers
-          # worker.send
-
       if channel
-        $worker.onMessage({channel, model})
+        for id, worker of cluster.workers
+          worker.send {channel, model}
+
+        next()
+        return
 
     process.nextTick(next)

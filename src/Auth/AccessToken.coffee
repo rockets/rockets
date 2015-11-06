@@ -14,8 +14,3 @@ module.exports = class AccessToken
   # Uses a 5 second safety period just to make sure.
   hasExpired: () ->
     return (@expires - Date.now() // 1000) < 5
-
-
-  # Returns the request authorization headers for this token.
-  getHeaders: () ->
-    return bearer: @token
