@@ -28,14 +28,15 @@ module.exports = class OAuth2
       username: process.env.CLIENT_ID
       password: process.env.CLIENT_SECRET
       data:
-        grant_type: 'client_credentials'
+        grant_type: 'password'
+        username: process.env.USERNAME
+        password: process.env.PASSWORD
 
     restler.post('https://reddit.com/api/v1/access_token', options)
       .on('success', (data, response) =>
 
           log.info {
             event: 'token.response'
-            data: data
           }
 
           @token = new AccessToken(data)
@@ -57,7 +58,6 @@ module.exports = class OAuth2
         log.error {
           message: 'Unexpected status code for access token request'
           status: response?.statusCode
-          data: data
         }
       )
       .on('complete', (result, response) =>
@@ -166,7 +166,6 @@ module.exports = class OAuth2
             log.error {
               message: 'Unexpected status code'
               status: response?.statusCode
-              data: data
             }
 
             handler()
@@ -175,7 +174,6 @@ module.exports = class OAuth2
 
             log.info {
               event: 'model.request.complete'
-              result: result
               status: response?.statusCode
             }
 
@@ -218,96 +216,3 @@ module.exports = class OAuth2
           headers: response.headers
           exception: exception
         }
-
-
-  # # Adds a new request to the rate limit queue, where handler expects parameters
-  # # error, response, and body.
-  # enqueueRequest: (parameters, handler) ->
-
-  #   # Schedule a request on the rate limit queue
-  #   @rate.push (next) =>
-
-  #     log.info {
-  #       event: 'request'
-  #       parameters: parameters
-  #     }
-
-  #     restler.request(parameters.url, parameters)
-  #       .on('success', (data, response) ->
-
-  #         try
-
-  #            # Trying to determine where we're stalling
-  #           log.info {
-  #             event: 'request.call.handler'
-  #             response: response
-  #             data: data
-  #           }
-
-  #           handler(JSON.decode(data))
-
-  #           # Trying to determine where we're stalling
-  #           log.info {
-  #             event: 'request.after.handler'
-  #           }
-
-  #         catch exception
-  #           log.error {
-  #             message: 'Something went wrong during response handling'
-  #             exception: exception
-  #             response: response
-  #           }
-
-  #           # ??
-  #           handler()
-  #           next()
-
-  #       )
-  #       .on('error', (err, response) ->
-  #         log.error {
-  #           message: 'Unexpected request error'
-  #           response: response
-  #           error: err
-  #         }
-
-  #         handler()
-  #       )
-  #       .on('fail', (data, response) ->
-
-  #         log.error {
-  #           message: 'Unexpected status code'
-  #           response: response
-  #           data: data
-  #         }
-
-  #         handler()
-  #       )
-  #       .on('complete', (result, response) ->
-
-  #         log.info {
-  #           event: 'ratelimit.set.before'
-  #           headers: response?.headers
-  #         }
-
-  #         # Set the rate limit allowance using the reddit rate-limit headers.
-  #         # See https://www.reddit.com/1yxrp7
-  #         @setRateLimit(response)
-
-  #         log.info {
-  #           event: 'ratelimit.set.after'
-  #           headers: response?.headers
-  #         }
-
-  #         # Trying to determine where we're stalling
-  #         log.info {
-  #           event: 'request.try.handler'
-  #           headers: response?.headers
-  #         }
-
-  #         # Trying to determine where we're stalling
-  #         log.info {
-  #           event: 'request.next'
-  #         }
-
-  #         next()
-  #       )
