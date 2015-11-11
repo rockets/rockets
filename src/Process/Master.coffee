@@ -36,9 +36,9 @@ module.exports = class Master
 
     for _ in [0...20]
       tasks.push comments.reversed()
-      # tasks.push posts.forward()
+      tasks.push posts.forward()
 
-    # tasks.push posts.reversed()
+    tasks.push posts.reversed()
 
     # Run all tasks in series, forever.
     async.forever (next) ->
