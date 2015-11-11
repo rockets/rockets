@@ -23,7 +23,8 @@ module.exports = class SocketClient
             error: err
           }
 
-      done()
+      done?()
 
     else
-      process.nextTick(done)
+      if typeof done === 'function'
+        process.nextTick(done)
