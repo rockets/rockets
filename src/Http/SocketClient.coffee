@@ -26,5 +26,5 @@ module.exports = class SocketClient
       done?()
 
     else
-      if typeof done === 'function'
+      if typeof done is 'function'
         process.nextTick(done)
