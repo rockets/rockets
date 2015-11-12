@@ -35,10 +35,6 @@ module.exports = class OAuth2
     restler.post('https://reddit.com/api/v1/access_token', options)
       .on('success', (data, response) =>
 
-          log.info {
-            event: 'token.response'
-          }
-
           @token = new AccessToken(data)
 
           log.info {
@@ -178,18 +174,13 @@ module.exports = class OAuth2
             }
 
             log.info {
-              event: 'ratelimit.set.before'
+              event: 'ratelimit.set'
               headers: response?.headers
             }
 
             # Set the rate limit allowance using the reddit rate-limit headers.
             # See https://www.reddit.com/1yxrp7
             @setRateLimit(response)
-
-            log.info {
-              event: 'ratelimit.set.after'
-              headers: response?.headers
-            }
           )
 
 
@@ -212,7 +203,7 @@ module.exports = class OAuth2
         message = 'Failed to set rate limit'
 
         log.error {
-          message: 'Failed to set rate limit'
+          message: message
           headers: response.headers
           exception: exception
         }
