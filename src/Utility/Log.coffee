@@ -8,10 +8,6 @@ module.exports = class Log
 
       #
       transports: [
-        new (winston.transports.Console)({
-          level:            'debug'
-          prettyPrint:      true
-        }),
         new (winston.transports.File)({
           name:             'info'
           filename:         'logs/info.log'
@@ -22,13 +18,6 @@ module.exports = class Log
           name:             'error'
           filename:         'logs/error.log'
           level:            'error'
-          prettyPrint:      true
-          handleExceptions: true
-        }),
-        new (winston.transports.File)({
-          name:             'all'
-          filename:         'logs/all.log'
-          level:            'debug'
           prettyPrint:      true
           handleExceptions: true
         }),

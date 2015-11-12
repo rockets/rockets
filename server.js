@@ -20,13 +20,9 @@ require('./src')();
 // Global log
 log = new Log();
 
-//
-// process.on('uncaughtException', function (err) {
-//   log.error({
-//     message: 'uncaughtException',
-//     err: err,
-//   });
-// });
-
 // Create a new master process if master or create a worker if it's a fork.
 cluster.isMaster ? new Master() : new Worker();
+
+// Manual GC every 30 seconds.
+// Required --expose-gc
+setInterval(global.gc, 30 * 1000);
