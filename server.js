@@ -24,5 +24,5 @@ log = new Log();
 cluster.isMaster ? new Master() : new Worker();
 
 // Manual GC every 30 seconds.
-// Required --expose-gc
-// setInterval(global.gc, 30 * 1000);
+// Requires --expose-gc
+setInterval(global.gc, 30 * 1000);
