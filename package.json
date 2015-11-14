@@ -31,6 +31,6 @@
     "test": "mocha --require ./test --compilers coffee:coffee-script/register --recursive",
     "posttest": "find ./src -name *.coffee | xargs ./node_modules/.bin/coffeelint",
     "start": "pm2 start process.json",
-    "stop": "pm2 stop rockets"
+    "stop": "pm2 stop process.json"
   }
 }
