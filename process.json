@@ -1,0 +1,17 @@
+{
+  "name"             : "rockets",
+  "args"             : [],
+  "script"           : "server.js",
+  "node_args"        : ["--stack_size=8192", "--use_idle_notification=false", "--expose_gc=true"],
+  "log_date_format"  : "YYYY-MM-DD HH:mm Z",
+  "error_file"       : "logs/process-error.log",
+  "out_file"         : "logs/process-info.log",
+  "watch"            : false,
+  "merge_logs"       : true,
+  "exec_interpreter" : "node",
+  "exec_mode"        : "fork",
+  "autorestart"      : false,
+  "env": {
+
+  }
+}
