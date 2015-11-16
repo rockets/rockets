@@ -162,6 +162,9 @@ module.exports = class OAuth2
             log.error {
               message: 'Unexpected status code'
               status: response?.statusCode
+              parameters: parameters
+              response: response
+              data: data
             }
 
             handler()
