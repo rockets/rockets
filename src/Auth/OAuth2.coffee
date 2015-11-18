@@ -102,89 +102,111 @@ module.exports = class OAuth2
           parameters: parameters
         }
 
-        restler.request(parameters.url, parameters)
+        try
 
-          .on('success', (data, response) ->
+          restler.request(parameters.url, parameters)
 
-            log.info {
-              event: 'model.request.success'
-            }
+            .on('success', (data, response) ->
 
-            try
-              parsed = JSON.parse(data)
+              log.info {
+                event: 'model.request.success'
+              }
 
-              # Make sure that the parsed JSON is also in the expected format, which
-              # should be a standard reddit 'Listing'.
-              if parsed.data and 'children' of parsed.data
+              try
+                parsed = JSON.parse(data)
 
-                # reddit doesn't always send results in the right order. This will
-                # sort the models by ascending ID, ie. from oldest to newest.
-                children = parsed.data.children.sort (a, b) ->
-                  return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
+                # Make sure that the parsed JSON is also in the expected format, which
+                # should be a standard reddit 'Listing'.
+                if parsed.data and 'children' of parsed.data
 
-                log.info {
-                  event: 'request.models.received'
-                  count: children.length
-                }
+                  # reddit doesn't always send results in the right order. This will
+                  # sort the models by ascending ID, ie. from oldest to newest.
+                  children = parsed.data.children.sort (a, b) ->
+                    return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
 
-                handler(children)
+                  log.info {
+                    event: 'request.models.received'
+                    count: children.length
+                  }
 
-              else
+                  handler(children)
+
+                else
+                  log.error {
+                    message: 'No children found in parsed JSON response'
+                    data: parsed
+                  }
+
+                  handler()
+
+              catch exception
+
                 log.error {
-                  message: 'No children found in parsed JSON response'
-                  data: parsed
+                  message: 'Something went wrong during response handling'
+                  exception: exception
+                  status: response?.statusCode
                 }
 
                 handler()
 
-            catch exception
-
+            )
+            .on('error', (err, response) ->
               log.error {
-                message: 'Something went wrong during response handling'
-                exception: exception
+                message: 'Unexpected request error'
                 status: response?.statusCode
+                error: err
               }
 
               handler()
+            )
+            .on('timeout', (ms) ->
+              log.error {
+                message: 'Request timed out'
+                parameters: parameters
+              }
 
-          )
-          .on('error', (err, response) ->
-            log.error {
-              message: 'Unexpected request error'
-              status: response?.statusCode
-              error: err
-            }
+              handler()
+            )
+            .on('abort', () ->
+              log.error {
+                message: 'Request was aborted'
+                parameters: parameters
+              }
 
-            handler()
-          )
-          .on('fail', (data, response) ->
+              handler()
+            )
+            .on('fail', (data, response) ->
 
-            log.error {
-              message: 'Unexpected status code'
-              status: response?.statusCode
+              log.error {
+                message: 'Unexpected status code'
+                status: response?.statusCode
+                parameters: parameters
+              }
+
+              handler()
+            )
+            .on('complete', (result, response) =>
+
+              log.info {
+                event: 'model.request.complete'
+                status: response?.statusCode
+              }
+
+              log.info {
+                event: 'ratelimit.set'
+                headers: response?.headers
+              }
+
+              # Set the rate limit allowance using the reddit rate-limit headers.
+              # See https://www.reddit.com/1yxrp7
+              @setRateLimit(response)
+            )
+
+        catch
+          log.error {
+              message: 'Something went wrong during the request?'
               parameters: parameters
-              response: response
-              data: data
             }
-
-            handler()
-          )
-          .on('complete', (result, response) =>
-
-            log.info {
-              event: 'model.request.complete'
-              status: response?.statusCode
-            }
-
-            log.info {
-              event: 'ratelimit.set'
-              headers: response?.headers
-            }
-
-            # Set the rate limit allowance using the reddit rate-limit headers.
-            # See https://www.reddit.com/1yxrp7
-            @setRateLimit(response)
-          )
 
 
   # Attempts to set the allowed rate limit using a response

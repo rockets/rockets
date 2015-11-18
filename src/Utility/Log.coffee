@@ -44,6 +44,3 @@ module.exports = class Log
   # Log arbitrary arguments to the error log
   error: () ->
     @logger.log 'error', @bundle(arguments)
-
-    # Also print a stack trace to stderr
-    console.trace()
