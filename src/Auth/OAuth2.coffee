@@ -104,6 +104,8 @@ module.exports = class OAuth2
 
         try
 
+          errored = false
+
           restler.request(parameters.url, parameters)
 
             .on('success', (data, response) ->
@@ -157,7 +159,10 @@ module.exports = class OAuth2
                 error: err
               }
 
-              handler()
+              if not errored
+                handler()
+
+              errored = true
             )
             .on('timeout', (ms) ->
               log.error {
@@ -204,9 +209,11 @@ module.exports = class OAuth2
 
         catch
           log.error {
-              message: 'Something went wrong during the request?'
-              parameters: parameters
-            }
+            message: 'Something went wrong during the request?'
+            parameters: parameters
+          }
+
+          handler()
 
 
   # Attempts to set the allowed rate limit using a response
