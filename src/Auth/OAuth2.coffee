@@ -6,6 +6,7 @@ Used to make authenticated requests to the reddit API. Responsible for:
 
 See https://github.com/reddit/reddit/wiki/OAuth2
 ###
+
 module.exports = class OAuth2
 
   constructor: () ->
@@ -41,7 +42,11 @@ module.exports = class OAuth2
             event: 'token.created'
             token: @token.token
           }
-
+      )
+      .on('timeout', (ms) ->
+        log.error {
+          message: 'Access token request timeout'
+        }
       )
       .on('error', (err, response) ->
         log.error {
@@ -230,16 +235,18 @@ module.exports = class OAuth2
               log.info {
                 event: 'Manual abort!'
               }
-              request.abort("Manual timeout")
+
+              request.abort()
 
             else
               log.info {
                 event: 'Manual timeout skipped - request is false?'
               }
 
-            handler()
+              # Call handler here because it won't be called in abort.
+              handler()
 
-        ), (5 * 1000)
+        ), (10 * 1000)
 
         request = @_models(parameters, (children) -> (
           clearTimeout(timeout)
