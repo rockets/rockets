@@ -65,6 +65,132 @@ module.exports = class OAuth2
       )
 
 
+  _models: (parameters, handler) ->
+
+    log.info {
+      event: 'request'
+      parameters: parameters
+    }
+
+    try
+
+      errored = false
+
+      log.info {
+        event: 'request.try'
+      }
+
+      return restler.request(parameters.url, parameters)
+
+        .on('success', (data, response) ->
+
+          log.info {
+            event: 'model.request.success'
+          }
+
+          try
+            parsed = JSON.parse(data)
+
+            # Make sure that the parsed JSON is also in the expected format, which
+            # should be a standard reddit 'Listing'.
+            if parsed.data and 'children' of parsed.data
+
+              # reddit doesn't always send results in the right order. This will
+              # sort the models by ascending ID, ie. from oldest to newest.
+              children = parsed.data.children.sort (a, b) ->
+                return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
+
+              log.info {
+                event: 'request.models.received'
+                count: children.length
+              }
+
+              handler(children)
+
+            else
+              log.error {
+                message: 'No children found in parsed JSON response'
+                data: parsed
+              }
+
+              handler()
+
+          catch exception
+
+            log.error {
+              message: 'Something went wrong during response handling'
+              exception: exception
+              status: response?.statusCode
+            }
+
+            handler()
+
+        )
+        .on('error', (err, response) ->
+          log.error {
+            message: 'Unexpected request error'
+            status: response?.statusCode
+            error: err
+          }
+
+          if not errored
+            handler()
+
+          errored = true
+        )
+        .on('timeout', (ms) ->
+          log.error {
+            message: 'Request timed out'
+            parameters: parameters
+          }
+
+          handler()
+        )
+        .on('abort', () ->
+          log.error {
+            message: 'Request was aborted'
+            parameters: parameters
+          }
+
+          handler()
+        )
+        .on('fail', (data, response) ->
+
+          log.error {
+            message: 'Unexpected status code'
+            status: response?.statusCode
+            parameters: parameters
+          }
+
+          handler()
+        )
+        .on('complete', (result, response) =>
+
+          log.info {
+            event: 'model.request.complete'
+            status: response?.statusCode
+          }
+
+          log.info {
+            event: 'ratelimit.set'
+            headers: response?.headers
+          }
+
+          # Set the rate limit allowance using the reddit rate-limit headers.
+          # See https://www.reddit.com/1yxrp7
+          @setRateLimit(response)
+        )
+
+    catch
+      log.error {
+        message: 'Something went wrong during the request?'
+        parameters: parameters
+      }
+
+      handler()
+      return false
+
+
   # Requests models from reddit.com using given request parameters.
   # Passes models to a handler or `false` if the request was unsuccessful.
   models: (parameters, handler) ->
@@ -96,124 +222,31 @@ module.exports = class OAuth2
       parameters.headers['Authorization'] = "Bearer #{@token.token}"
 
       @rate.delay () =>
+        request = false
 
-        log.info {
-          event: 'request'
-          parameters: parameters
-        }
-
-        try
-
-          errored = false
-
-          restler.request(parameters.url, parameters)
-
-            .on('success', (data, response) ->
-
+        timeout = setTimeout (
+          () ->
+            if request
               log.info {
-                event: 'model.request.success'
+                event: 'Manual abort!'
               }
+              request.abort("Manual timeout")
 
-              try
-                parsed = JSON.parse(data)
-
-                # Make sure that the parsed JSON is also in the expected format, which
-                # should be a standard reddit 'Listing'.
-                if parsed.data and 'children' of parsed.data
-
-                  # reddit doesn't always send results in the right order. This will
-                  # sort the models by ascending ID, ie. from oldest to newest.
-                  children = parsed.data.children.sort (a, b) ->
-                    return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
-
-                  log.info {
-                    event: 'request.models.received'
-                    count: children.length
-                  }
-
-                  handler(children)
-
-                else
-                  log.error {
-                    message: 'No children found in parsed JSON response'
-                    data: parsed
-                  }
-
-                  handler()
-
-              catch exception
-
-                log.error {
-                  message: 'Something went wrong during response handling'
-                  exception: exception
-                  status: response?.statusCode
-                }
-
-                handler()
-
-            )
-            .on('error', (err, response) ->
-              log.error {
-                message: 'Unexpected request error'
-                status: response?.statusCode
-                error: err
-              }
-
-              if not errored
-                handler()
-
-              errored = true
-            )
-            .on('timeout', (ms) ->
-              log.error {
-                message: 'Request timed out'
-                parameters: parameters
-              }
-
-              handler()
-            )
-            .on('abort', () ->
-              log.error {
-                message: 'Request was aborted'
-                parameters: parameters
-              }
-
-              handler()
-            )
-            .on('fail', (data, response) ->
-
-              log.error {
-                message: 'Unexpected status code'
-                status: response?.statusCode
-                parameters: parameters
-              }
-
-              handler()
-            )
-            .on('complete', (result, response) =>
-
+            else
               log.info {
-                event: 'model.request.complete'
-                status: response?.statusCode
+                event: 'Manual timeout skipped - request is false?'
               }
 
-              log.info {
-                event: 'ratelimit.set'
-                headers: response?.headers
-              }
+            handler()
 
-              # Set the rate limit allowance using the reddit rate-limit headers.
-              # See https://www.reddit.com/1yxrp7
-              @setRateLimit(response)
-            )
+        ), (5 * 1000)
 
-        catch
-          log.error {
-            message: 'Something went wrong during the request?'
-            parameters: parameters
-          }
+        request = @_models(parameters, (children) -> (
+          clearTimeout(timeout)
+          handler(children)
+        ))
 
-          handler()
+        return
 
 
   # Attempts to set the allowed rate limit using a response
