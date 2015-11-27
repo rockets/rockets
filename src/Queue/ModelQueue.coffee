@@ -7,21 +7,25 @@ module.exports = class ModelQueue extends Queue
   # Send a model to each worker.
   process: (model, next) ->
 
+    # Log the model so that we can keep track of received models.
+    log.model(model)
+
     # Exclude deleted models entirely.
-    if model.data.author?.toLowerCase() not in ['[deleted]', '[removed]']
-      switch model.kind
-        when 't1' then channel = 'comments'
-        when 't3' then channel = 'posts'
+    if model.data.author?.toLowerCase() in ['[deleted]', '[removed]']
+      return process.nextTick(next)
 
-      if not channel
-        process.nextTick(next)
-        return
+    # Determine which channel the model belongs to.
+    switch model.kind
+      when 't1' then channel = 'comments'
+      when 't3' then channel = 'posts'
 
-      # Log the model so that we can keep track of received models.
-      log.model(model)
+    # Unknown model kind or bad data.
+    if not channel
+      process.nextTick(next)
+      return
 
-      # Send the model to each worker.
-      for id, worker of cluster.workers
-        worker.send {channel, model}
+    # Send the model to each worker.
+    for id, worker of cluster.workers
+      worker.send {channel, model}
 
-      next()
+    next()

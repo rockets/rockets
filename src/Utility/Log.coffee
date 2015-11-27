@@ -74,8 +74,7 @@ module.exports = class Log
       when 't1' then logger = @comments
       when 't3' then logger = @posts
 
-    if logger
-      logger.log 'info', @bundle({
-        fullname: model.data.name,
-        pk: parseInt(model.data.id, 36)
-      })
+    logger.log 'info', @bundle({
+      fullname: model.data.name,
+      pk: parseInt(model.data.id, 36)
+    })

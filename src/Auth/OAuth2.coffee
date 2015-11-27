@@ -21,9 +21,6 @@ module.exports = class OAuth2
     if @token and not @token.hasExpired()
       return callback(@token)
 
-    # Reset token.
-    @token = false
-
     parameters =
       username: process.env.CLIENT_ID
       password: process.env.CLIENT_SECRET
@@ -112,15 +109,6 @@ module.exports = class OAuth2
 
         handler()
 
-      # Called when the request is aborted, most likely by timeout abort.
-      .on 'abort', () ->
-        log.error {
-          message: 'Request was aborted'
-          parameters: parameters
-        }
-
-        handler()
-
       # Called when the request was not successful, which is most likely due to
       # Reddit being down or under maintenance.
       .on 'fail', (data, response) ->
@@ -177,10 +165,8 @@ module.exports = class OAuth2
         request = false
 
         cancel = () ->
-          if request
-            request.abort()
-          else
-            handler()
+          if request then request.abort()
+          return handler()
 
         # 10s fallback timeout.
         timeout = setTimeout cancel, (10 * 1000)

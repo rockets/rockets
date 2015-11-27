@@ -152,7 +152,7 @@ module.exports = class Task
 
       # Append the models models to the back of the backlog models
       @enqueue backlog.concat(models)
-      return done()
+      done()
 
 
   # Fetches a backlog of models starting from and including 'start', up to and
