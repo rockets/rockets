@@ -40,32 +40,25 @@ module.exports = class OAuth2
 
       # Called when an access toen
       .on 'timeout', (ms) ->
-        log.error {
-          message: 'Access token request timeout'
-        }
+        log.error 'Access token request timeout'
 
       # Called when the request errored, which is not the same as a failed
       # request. This should indicate that something should be fixed.
       .on 'error', (err, response) ->
-        log.error {
-          message: 'Unexpected error during access token request'
+        log.error 'Unexpected error during access token request',
           status: response?.statusCode
           error: err
-        }
 
       # Called when the request was not successful, which is most likely due to
       # Reddit being down or under maintenance.
       .on 'fail', (data, response) ->
-        log.error {
-          message: 'Unexpected status code for access token request'
+        log.error 'Unexpected status code for access token request',
           status: response?.statusCode
-        }
 
       # Called when the request has completed, regardless of whether it was
       # successful. Use whatever token state we currently have.
       .on 'complete', (result, response) =>
         callback(@token)
-
 
 
   _models: (parameters, handler) ->
@@ -92,31 +85,25 @@ module.exports = class OAuth2
       # Called when the request errored, which is not the same as a failed
       # request. This should indicate that something should be fixed.
       .on 'error', (err, response) ->
-        log.error {
-          message: 'Unexpected request error'
+        log.error 'Unexpected request error',
           status: response?.statusCode
           error: err
-        }
 
         handler()
 
       # Called when the request times out.
       .on 'timeout', (ms) ->
-        log.error {
-          message: 'Request timed out'
+        log.error 'Request timed out',
           parameters: parameters
-        }
 
         handler()
 
       # Called when the request was not successful, which is most likely due to
       # Reddit being down or under maintenance.
       .on 'fail', (data, response) ->
-        log.error {
-          message: 'Unexpected status code'
+        log.error 'Unexpected status code',
           status: response?.statusCode
           parameters: parameters
-        }
 
         handler()
 

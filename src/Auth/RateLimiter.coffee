@@ -31,8 +31,6 @@ module.exports = class RateLimiter
   setRate: (tasks, seconds) ->
     @rate = if seconds > 0 then tasks / seconds else 1
 
-    log.info {
-      event: 'rate.limit'
+    log.info 'rate.limit',
       tasks: tasks
       seconds: seconds
-    }

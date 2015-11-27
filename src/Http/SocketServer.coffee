@@ -15,8 +15,7 @@ module.exports = class SocketServer
     @server = new ws.Server options
 
     # Called when a new client has connected.
-    @server.on 'connection', (socket) =>
-      @onConnect(socket)
+    @server.on 'connection', @onConnect.bind(@)
 
 
   # Returns this server's channels.
@@ -28,10 +27,8 @@ module.exports = class SocketServer
   onConnect: (socket) ->
     client = new SocketClient(socket)
 
-    log.info {
-      event: 'client.connect',
-      client: client.id,
-    }
+    log.info 'client.connect',
+      client: client.id
 
     # Called when an incoming message is received
     socket.on 'message', (message) =>
@@ -41,47 +38,41 @@ module.exports = class SocketServer
     socket.on 'close', () =>
       @onDisconnect(client)
 
+    # Called when an error occurs on the socket.
     socket.on 'error', (err) ->
-      log.error {
-        error: err or 'Unknown',
-        stack: err?.stack
-      }
+      log.error err or 'Unknown socket error'
 
 
   # Called when the connection to a client is lost.
   onDisconnect: (client) ->
     @channels.removeClient(client)
-
-    log.info {
-      event: 'client.disconnect',
+    log.info 'client.disconnect',
       client: client.id,
-    }
 
 
   # Called when an incoming message is received.
   onMessage: (message, client) ->
-
-    log.info {
-      event: 'client.message',
-      message: message,
-      client: client.id,
-    }
-
-    # Attempt to parse the incoming message
     if data = @parseMessage(message, client) then @handleData(data, client)
 
 
   # Determines and returns and appropriate filter for the given data.
   getFilters: (data, client) ->
+
+    # Don't break BC
+    if data.filters
+      data.include = data.filters
+
     switch data.channel
-      when Channel.POSTS    then return new PostFilter(data.filters)
-      when Channel.COMMENTS then return new CommentFilter(data.filters)
+      when Channel.POSTS    then filter = PostFilter
+      when Channel.COMMENTS then filter = CommentFilter
+      else
+        return
 
+    return {
+      include: if data.include then new filter(data.include)
+      exclude: if data.exclude then new filter(data.exclude)
+    }
 
-  # Logs a client error then sends it to the client.
-  clientError: (client, error) ->
-    log.error   {error}
-    client.send {error}
 
   # Determines and returns a channel instance for the given data.
   # Sends an error to the client if the channel is not supported.
@@ -90,10 +81,10 @@ module.exports = class SocketServer
       return @channels.createChannel(data.channel)
 
     # Send an error message to the client.
-    client.send {
+    client.send
       error:
         message: 'Unsupported channel'
-    }
+        options: [Channel.POSTS, Channel.COMMENTS]
 
 
   # Attempts to parse an incoming message.
@@ -104,21 +95,18 @@ module.exports = class SocketServer
     catch e
 
       # Send an error message to the client.
-      client.send {
+      client.send
         error:
-          message: e.message,
-      }
+          message: "Could not parse subscription: #{e.message}"
 
 
   # Handles the data of a parsed message.
   # Creates a subscription if the data produces a valid channel.
   handleData: (data, client) ->
 
-    log.info {
-      event: 'subscription',
-      data: data,
-      client: client.id,
-    }
+    log.info 'subscription',
+      data: data
+      client: client.id
 
     channel = @getChannel(data, client)
     filters = @getFilters(data, client)

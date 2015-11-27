@@ -8,61 +8,61 @@ module.exports = class Filter
   @STRING  = 'string'
   @REGEX   = 'regex'
 
-  constructor: (values) ->
-    if typeof values is 'object' then @parseValues(values, @schema())
+  constructor: (rules) ->
+    if typeof rules is 'object' then @parseRules(rules, @schema())
 
 
-  # Parses all given filter values into consistent formats. This also removes
-  # any unsupported filters, and prepares complex ones for later use.
-  parseValues: (values, schema) ->
-    @filters = {}
+  # Parses all given rules into consistent formats. This also removes
+  # any unsupported rules, and prepares complex ones for later use.
+  parseRules: (rules, schema) ->
+    @rules = {}
 
-    for key of values
+    for key of rules
       if key of schema
-        value = @parse(values[key], schema[key])
+        rule = @parse(rules[key], schema[key])
 
         # Only set the filter if it resolved to something useful
-        if value? then @filters[key] = value
+        if rule? then @rules[key] = rule
 
 
-  # Parses a single value against an expected type.
-  parse: (value, type) ->
+  # Parses a single rule against an expected type.
+  parse: (rule, type) ->
 
-    # Convert every value into an array for consistency
-    value = [].concat(value)
+    # Convert every rule into an array for consistency
+    rule = [].concat(rule)
 
     switch type
-      when Filter.STRING  then return value.map (x) -> "#{x}"
-      when Filter.BOOLEAN then return value.map (x) -> !! x
+      when Filter.STRING  then return rule.map (x) -> "#{x}"
+      when Filter.BOOLEAN then return rule.map (x) -> !! x
       when Filter.REGEX
         try
-          return new RegExp((value.map (x) -> "(?:#{x})").join('|'), 'i')
+          return new RegExp((rule.map (x) -> "(?:#{x})").join('|'), 'i')
 
-        # This indicates that a contains filter was provided but wasn't valid,
+        # This indicates that a "contains" rule was provided but wasn't valid,
         # which should fail validation.
         return false
 
 
-  # Passes if the filter is empty or contains the value
-  check: (filter, value) ->
-    return filter.length is 0 or value in filter
+  # Passes if the rule is empty or contains the value
+  check: (rule, value) ->
+    return rule.length is 0 or value in rule
 
 
-  # Checks if a model's subreddit matches any of the values in the filter.
-  subreddit: (model, filter) ->
-    return @check(filter, model.data.subreddit)
+  # Checks if a model's subreddit matches any of the values in the rule.
+  subreddit: (model, rule) ->
+    return @check(rule, model.data.subreddit)
 
 
-  # Checks if a model's user/author matches any of the values in the filter.
-  author: (model, filter) ->
-    return @check(filter, model.data.author)
+  # Checks if a model's user/author matches any of the values in the rule.
+  author: (model, rule) ->
+    return @check(rule, model.data.author)
 
 
-  # Validates a model against this filter, ie. determines if the model should be
-  # send to the client that owns the subscription that contains this filter.
+  # Validates a model against this rule, ie. determines if the model should be
+  # send to the client that owns the subscription that contains this rule.
   validate: (model) ->
-    if @filters
-      for name, filter of @filters
-        if not @[name](model, filter) then return false
+    if @rules
+      for name, rule of @rules
+        if not @[name](model, rule) then return false
 
     return true

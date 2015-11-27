@@ -22,7 +22,7 @@ describe 'SocketServer', ->
       parsed = s.parseMessage(";", client)
       assert.deepEqual(client.last, {
         error:
-          message: "Unexpected token ;"
+          message: "Could not parse subscription: Unexpected token ;"
       })
       assert.isUndefined(parsed)
 
@@ -46,17 +46,21 @@ describe 'SocketServer', ->
       assert.deepEqual(client.last, {
         error:
           message: 'Unsupported channel'
+          options: [
+            'posts',
+            'comments'
+          ]
       })
 
 
-  describe 'getFilters', ->
+  describe 'getFilters (using deprected filter syntax)', ->
 
     it 'should produce post filter for posts channel', ->
       s = new SocketServer()
       client = new FakeClient()
       data = {channel: 'posts', filters: { nsfw: false }}
       filter = s.getFilters(data, client)
-      assert.deepEqual(filter.filters, { nsfw: [ false ] })
+      assert.deepEqual(filter.include.rules, { nsfw: [ false ] })
       assert.isUndefined(client.last)
 
     it 'should produce comment filter for comments channel', ->
@@ -64,13 +68,79 @@ describe 'SocketServer', ->
       client = new FakeClient()
       data = {channel: 'comments', filters: { root: false }}
       filter = s.getFilters(data, client)
-      assert.deepEqual(filter.filters, { root: [ false ] })
+      assert.deepEqual(filter.include.rules, { root: [ false ] })
       assert.isUndefined(client.last)
 
     it 'should produce nothing filter for invalid channel', ->
       s = new SocketServer()
       client = new FakeClient()
       data = {channel: 'nope', filters: { something: false }}
+      filter = s.getFilters(data, client)
+      assert.isUndefined(filter)
+      assert.isUndefined(client.last)
+
+
+
+  describe 'getFilters', ->
+
+    it 'should produce inclusion post filter for posts channel', ->
+      s = new SocketServer()
+      client = new FakeClient()
+      data = {channel: 'posts', include: { nsfw: false }}
+      filter = s.getFilters(data, client)
+      assert.deepEqual(filter.include.rules, { nsfw: [ false ] })
+      assert.isUndefined(filter.exclude)
+      assert.isUndefined(client.last)
+
+    it 'should produce inclusion comment filter for comments channel', ->
+      s = new SocketServer()
+      client = new FakeClient()
+      data = {channel: 'comments', include: { root: false }}
+      filter = s.getFilters(data, client)
+      assert.deepEqual(filter.include.rules, { root: [ false ] })
+      assert.isUndefined(filter.exclude)
+      assert.isUndefined(client.last)
+
+    it 'should produce exclusion post filter for posts channel', ->
+      s = new SocketServer()
+      client = new FakeClient()
+      data = {channel: 'posts', exclude: { nsfw: false }}
+      filter = s.getFilters(data, client)
+      assert.deepEqual(filter.exclude.rules, { nsfw: [ false ] })
+      assert.isUndefined(filter.include)
+      assert.isUndefined(client.last)
+
+    it 'should produce exclusion comment filter for comments channel', ->
+      s = new SocketServer()
+      client = new FakeClient()
+      data = {channel: 'comments', exclude: { root: false }}
+      filter = s.getFilters(data, client)
+      assert.deepEqual(filter.exclude.rules, { root: [ false ] })
+      assert.isUndefined(filter.include)
+      assert.isUndefined(client.last)
+
+    it 'should produce post filters for posts channel', ->
+      s = new SocketServer()
+      client = new FakeClient()
+      data = {channel: 'posts', exclude: { nsfw: false }}
+      filter = s.getFilters(data, client)
+      assert.deepEqual(filter.exclude.rules, { nsfw: [ false ] })
+      assert.isUndefined(filter.include)
+      assert.isUndefined(client.last)
+
+    it 'should produce comment filters for comments channel', ->
+      s = new SocketServer()
+      client = new FakeClient()
+      data = {channel: 'comments', exclude: { root: false }, include: { root: false }}
+      filter = s.getFilters(data, client)
+      assert.deepEqual(filter.exclude.rules, { root: [ false ] })
+      assert.deepEqual(filter.include.rules, { root: [ false ] })
+      assert.isUndefined(client.last)
+
+    it 'should produce nothing filter for invalid channel', ->
+      s = new SocketServer()
+      client = new FakeClient()
+      data = {channel: 'nope', include: { something: false }}
       filter = s.getFilters(data, client)
       assert.isUndefined(filter)
       assert.isUndefined(client.last)

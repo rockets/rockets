@@ -12,16 +12,16 @@ module.exports = class CommentFilter extends Filter
     root:         Filter.BOOLEAN
 
 
-  # Checks if a comment contains any of the patterns in the filter.
+  # Checks if a comment contains any of the patterns in the rule.
   contains: (comment, regex) ->
     return regex and regex.test(comment.data.body)
 
 
-  # Checks if a comment's post matches any of the fullnames in the filter.
-  post: (comment, filter) ->
-    return @check(filter, comment.data.link_id)
+  # Checks if a comment's post matches any of the fullnames in the rule.
+  post: (comment, rule) ->
+    return @check(rule, comment.data.link_id)
 
 
-  # Checks if the filter contains whether a comment is a root comment.
-  root: (comment, filter) ->
-    return @check(filter, comment.data.parent_id[0...2] is 't3')
+  # Checks if the rule requires whether a comment is a root comment.
+  root: (comment, rule) ->
+    return @check(rule, comment.data.parent_id[0...2] is 't3')

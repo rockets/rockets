@@ -6,48 +6,46 @@ module.exports = class Log
   constructor: () ->
 
     # For general logging.
-    @logger = new winston.Logger {
+    @logger = new winston.Logger
       transports: [
         new (winston.transports.File)({
           name:             'info'
           filename:         'logs/info.log'
           level:            'info'
-          prettyPrint:      true
+          timestamp:        false
         }),
         new (winston.transports.File)({
           name:             'error'
           filename:         'logs/error.log'
           level:            'error'
-          prettyPrint:      true
+          timestamp:        false
           handleExceptions: true
         }),
       ],
       exitOnError: false
-    }
+
 
     # For logging posts
-    @posts = new winston.Logger {
+    @posts = new winston.Logger
       transports: [
         new (winston.transports.File)({
           name:             'posts'
           filename:         'logs/posts.log'
           level:            'info'
-          prettyPrint:      true
+          timestamp:        false
         }),
       ],
-    }
 
     # For logging comments
-    @comments = new winston.Logger {
+    @comments = new winston.Logger
       transports: [
         new (winston.transports.File)({
           name:             'comments'
           filename:         'logs/comments.log'
           level:            'info'
-          prettyPrint:      true
+          timestamp:        false
         }),
       ],
-    }
 
   # Bundle log data into a consistent format.
   bundle: (data) ->
@@ -59,13 +57,13 @@ module.exports = class Log
 
 
   # Log arbitrary arguments to the info log
-  info: () ->
-    @logger.log 'info', @bundle(arguments)
+  info: (message, metadata) ->
+    @logger.log 'info', message, @bundle(metadata)
 
 
   # Log arbitrary arguments to the error log
-  error: () ->
-    @logger.log 'error', @bundle(arguments)
+  error: (message, metadata) ->
+    @logger.log 'error', message, @bundle(metadata)
 
 
   # Log a model to its respective log.
