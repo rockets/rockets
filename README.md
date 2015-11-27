@@ -24,10 +24,9 @@ Subscriptions are sent to `ws://rockets.cc:3210` as JSON in the following format
 
 ```js
 {
-    "channel": "",
-    "filters": {
-
-    }
+    "channel": "",  // Model channel, eg. 'posts' or 'comments'
+    "include": {},  // Rules for which models to include.
+    "exclude": {},  // Rules for which models to exclude.
 }
 ```
 
@@ -36,10 +35,10 @@ Subscriptions are sent to `ws://rockets.cc:3210` as JSON in the following format
 - `comments`
 - `posts`
 
-### Filters
+### Rules
 
-All filters can be provided as either a single value or an array of values.
-A filter is considered a match if any of the values match the corresponding value in the model.
+All rules can be provided as either a single value or an array of values.
+A rule is considered a match if any of the values match the corresponding value in the model.
 
 #### Comments
 
@@ -67,7 +66,7 @@ A filter is considered a match if any of the values match the corresponding valu
 ```js
 {
     "channel": "comments",
-    "filters": {
+    "include": {
 
         "subreddit": [
           "space",
