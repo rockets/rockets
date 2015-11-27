@@ -1,4 +1,4 @@
-![Rockets](header.gif) [![Author](http://img.shields.io/badge/author-u%2Frtheunissen-336699.svg?style=flat-square)](https://reddit.com/u/rtheunissen) [![Stability](https://img.shields.io/badge/status-running-4CAF50.svg?style=flat-square)]() [![Support](https://img.shields.io/badge/support-donate-399c99.svg?style=flat-square)](https://plasso.co/rudolf.theunissen@gmail.com) 
+![Rockets](header.gif) [![Author](http://img.shields.io/badge/author-u%2Frtheunissen-336699.svg?style=flat-square)](https://reddit.com/u/rtheunissen) [![Support](https://img.shields.io/badge/support-donate-399c99.svg?style=flat-square)](https://plasso.co/rudolf.theunissen@gmail.com) [![Stability](https://img.shields.io/badge/status-running-66BB6A.svg?style=flat-square)]()
 ---
 
 **Mission**
