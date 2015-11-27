@@ -13,11 +13,15 @@ module.exports = class ModelQueue extends Queue
         when 't1' then channel = 'comments'
         when 't3' then channel = 'posts'
 
-      if channel
-        for id, worker of cluster.workers
-          worker.send {channel, model}
-
-        next()
+      if not channel
+        process.nextTick(next)
         return
 
-    process.nextTick(next)
+      # Log the model so that we can keep track of received models.
+      log.model(model)
+
+      # Send the model to each worker.
+      for id, worker of cluster.workers
+        worker.send {channel, model}
+
+      next()

@@ -44,7 +44,7 @@ module.exports = class Task
 
   # Converts a decimal index to a reddit base36 'fullname'
   indexToFullname: (index) ->
-    return @fullnamePrefix() + '_' + index.toString 36
+    return @fullnamePrefix() + '_' + index.toString(36)
 
 
   # Creates a comma-separated string list of all indices
@@ -54,35 +54,17 @@ module.exports = class Task
 
   # Converts a base36 ID to a base10 (decimal) ID
   idToIndex: (id) ->
-    return parseInt id, 36
+    return parseInt(id, 36)
 
 
   # Pushes models onto the model queue.
   enqueue: (models) ->
-    log.info {
-      event: 'models',
-      kind: @fullnamePrefix(),
-      count: models.length,
-      latency: Date.now() / 1000 - models[models.length - 1].data.created_utc
-    }
-
     @queue.push models
 
 
   # Fetches models using given parameters then feeds them to a model processor.
   fetch: (parameters, processor, done) ->
-    log.info {
-      event: 'fetch',
-      parameters: parameters,
-    }
-
     @oauth.models parameters, (models) =>
-      log.info {
-        event: 'fetch.models.received',
-        count: models?.length,
-        kind: @fullnamePrefix(),
-      }
-
       if models?.length > 0 then processor.call(@, models, done) else done()
 
 
@@ -105,66 +87,28 @@ module.exports = class Task
 
   # Fetches models 'forward'
   fetchForward: (done) ->
-    parameters = @forwardParameters()
-
-    log.info {
-      event: 'fetch.forward',
-      kind: @fullnamePrefix(),
-      parameters: parameters,
-    }
-
-    @fetch parameters, @processForward, done
+    @fetch @forwardParameters(), @processForward, done
 
 
   # Fetches models 'reversed'
   fetchReversed: (done) ->
-    parameters = @reversedParameters()
-
-    log.info {
-      event: 'fetch.reversed',
-      kind: @fullnamePrefix(),
-      parameters: parameters,
-    }
-
-    @fetch parameters, @processReversed, done
+    @fetch @reversedParameters(), @processReversed, done
 
 
   # Processes the models from an initial request.
   # Sets the initial value of the most recently processed model.
   processInitial: (models, done) ->
-    latest = @idToIndex(models[0].data.id)
-
-    log.info {
-      event: 'process.initial',
-      latest: latest,
-      kind: @fullnamePrefix(),
-    }
-
-    @latest = latest
+    @latest = @idToIndex(models[0].data.id)
     @enqueue(models)
-    return done()
+    done()
 
 
   # Processes the models from a 'forward' request.
   # Sets the current value of the most recently processed model.
   processForward: (models, done) ->
-
-    # This is the newest of the new models
-    latest = @idToIndex(models[models.length - 1].data.id)
-
-    log.info {
-      event: 'process.forward',
-      kind: @fullnamePrefix(),
-      models: models.length,
-      latest: latest,
-    }
-
-    # Set the latest model as the last model in the received list.
-    @latest = latest
-
-    # Push models onto the model queue (processed one by one)
+    @latest =  @idToIndex(models[models.length - 1].data.id)
     @enqueue(models)
-    return done()
+    done()
 
 
   # Processes the models from a 'reversed' request.
@@ -173,13 +117,6 @@ module.exports = class Task
 
     # This is the newest of the new models
     latest = @idToIndex(models[models.length - 1].data.id)
-
-    log.info {
-      event: 'process.reversed',
-      kind: @fullnamePrefix(),
-      models: models.length,
-      latest: latest,
-    }
 
     # Check if there actually is something new
     if latest <= @latest
@@ -199,13 +136,6 @@ module.exports = class Task
         # Slice only the newest models, starting from but excluding the most
         # recently processed model.
         @enqueue models[parseInt(index) + 1...]
-
-        log.info {
-          event: 'process.reversed.found',
-          kind: @fullnamePrefix(),
-          latest: latest,
-        }
-
         return done()
 
     # We couldn't find the most recently processed model in the list of new
@@ -228,67 +158,28 @@ module.exports = class Task
   # Fetches a backlog of models starting from and including 'start', up to and
   # including 'end'. Calls 'done' with the list of fetched backlog models.
   fetchBacklog: (start, end, done) ->
-
-    log.info {
-      event: 'fetch.backlog',
-      kind: @fullnamePrefix(),
-      start: start,
-      end: end,
-    }
-
     backlog = []
 
     # Used to check if we're done scanning the backlog
-    pending = () =>
-      log.info {
-        event: 'fetch.backlog.check',
-        kind: @fullnamePrefix(),
-        start: start,
-        end: end,
-      }
-
+    pending = () ->
       start < end
 
     # Called when we're done scanning the backlog
-    finish = () =>
-      log.info {
-        event: 'fetch.backlog.done',
-        kind: @fullnamePrefix(),
-        count: backlog.length,
-      }
-
-      return done(backlog)
+    finish = () ->
+      done(backlog)
 
     # Fetch task
     fetch = (callback) =>
       range = Math.min(Task.LIMIT, end - start)
 
-      log.info {
-        event: 'fetch.backlog.progress',
-        kind: @fullnamePrefix(),
-        start: start,
-        end: end,
-        range: range,
-      }
-
       @oauth.models @backlogParameters(start, range), (models) ->
         if models
           backlog = backlog.concat(models)
-
-          log.info {
-            event: 'fetch.backlog.received',
-            count: models.length,
-            total: backlog.length,
-          }
 
           # Move the start pointer forward. It's important that we don't update
           # this using the number of models, because there may be gaps in the
           # response which could result in a deadlock or missing data.
           start += range
-
-        log.info {
-          event: 'fetch.backlog.callback',
-        }
 
         callback()
 

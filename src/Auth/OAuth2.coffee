@@ -21,11 +21,10 @@ module.exports = class OAuth2
     if @token and not @token.hasExpired()
       return callback(@token)
 
-    log.info {
-      event: 'token.request'
-    }
+    # Reset token.
+    @token = false
 
-    options =
+    parameters =
       username: process.env.CLIENT_ID
       password: process.env.CLIENT_SECRET
       data:
@@ -33,177 +32,122 @@ module.exports = class OAuth2
         username: process.env.USERNAME
         password: process.env.PASSWORD
 
-    restler.post('https://reddit.com/api/v1/access_token', options)
-      .on('success', (data, response) =>
+      # 5s request timeout
+      timeout: 5000
 
-          @token = new AccessToken(data)
+    restler.post('https://reddit.com/api/v1/access_token', parameters)
 
-          log.info {
-            event: 'token.created'
-            token: @token.token
-          }
-      )
-      .on('timeout', (ms) ->
+      # Called when an access token request is successful.
+      .on 'success', (data, response) =>
+        @token = new AccessToken(data)
+
+      # Called when an access toen
+      .on 'timeout', (ms) ->
         log.error {
           message: 'Access token request timeout'
         }
-      )
-      .on('error', (err, response) ->
+
+      # Called when the request errored, which is not the same as a failed
+      # request. This should indicate that something should be fixed.
+      .on 'error', (err, response) ->
         log.error {
           message: 'Unexpected error during access token request'
           status: response?.statusCode
           error: err
         }
-      )
-      .on('fail', (data, response) ->
+
+      # Called when the request was not successful, which is most likely due to
+      # Reddit being down or under maintenance.
+      .on 'fail', (data, response) ->
         log.error {
           message: 'Unexpected status code for access token request'
           status: response?.statusCode
         }
-      )
-      .on('complete', (result, response) =>
-        log.info {
-          event: 'token.response.complete'
-        }
 
+      # Called when the request has completed, regardless of whether it was
+      # successful. Use whatever token state we currently have.
+      .on 'complete', (result, response) =>
         callback(@token)
-      )
+
 
 
   _models: (parameters, handler) ->
+    return restler.request(parameters.url, parameters)
 
-    log.info {
-      event: 'request'
-      parameters: parameters
-    }
+      # Called when the request was successful.
+      .on 'success', (data, response) ->
+        try
+          parsed = JSON.parse(data)
 
-    try
+          # Make sure that the parsed JSON is also in the expected format, which
+          # should be a standard reddit 'Listing'.
+          if not parsed.data or 'children' not of parsed.data
+            return handler()
 
-      errored = false
+          # Reddit doesn't always send results in the right order. This will
+          # sort the models by ascending ID, ie. from oldest to newest.
+          handler parsed.data.children.sort (a, b) ->
+            return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
 
-      log.info {
-        event: 'request.try'
-      }
-
-      return restler.request(parameters.url, parameters)
-
-        .on('success', (data, response) ->
-
-          log.info {
-            event: 'model.request.success'
-          }
-
-          try
-            parsed = JSON.parse(data)
-
-            # Make sure that the parsed JSON is also in the expected format, which
-            # should be a standard reddit 'Listing'.
-            if parsed.data and 'children' of parsed.data
-
-              # reddit doesn't always send results in the right order. This will
-              # sort the models by ascending ID, ie. from oldest to newest.
-              children = parsed.data.children.sort (a, b) ->
-                return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
-
-              log.info {
-                event: 'request.models.received'
-                count: children.length
-              }
-
-              handler(children)
-
-            else
-              log.error {
-                message: 'No children found in parsed JSON response'
-                data: parsed
-              }
-
-              handler()
-
-          catch exception
-
-            log.error {
-              message: 'Something went wrong during response handling'
-              exception: exception
-              status: response?.statusCode
-            }
-
-            handler()
-
-        )
-        .on('error', (err, response) ->
-          log.error {
-            message: 'Unexpected request error'
-            status: response?.statusCode
-            error: err
-          }
-
-          if not errored
-            handler()
-
-          errored = true
-        )
-        .on('timeout', (ms) ->
-          log.error {
-            message: 'Request timed out'
-            parameters: parameters
-          }
-
+        catch exception
           handler()
-        )
-        .on('abort', () ->
-          log.error {
-            message: 'Request was aborted'
-            parameters: parameters
-          }
 
-          handler()
-        )
-        .on('fail', (data, response) ->
+      # Called when the request errored, which is not the same as a failed
+      # request. This should indicate that something should be fixed.
+      .on 'error', (err, response) ->
+        log.error {
+          message: 'Unexpected request error'
+          status: response?.statusCode
+          error: err
+        }
 
-          log.error {
-            message: 'Unexpected status code'
-            status: response?.statusCode
-            parameters: parameters
-          }
+        handler()
 
-          handler()
-        )
-        .on('complete', (result, response) =>
+      # Called when the request times out.
+      .on 'timeout', (ms) ->
+        log.error {
+          message: 'Request timed out'
+          parameters: parameters
+        }
 
-          log.info {
-            event: 'model.request.complete'
-            status: response?.statusCode
-          }
+        handler()
 
-          log.info {
-            event: 'ratelimit.set'
-            headers: response?.headers
-          }
+      # Called when the request is aborted, most likely by timeout abort.
+      .on 'abort', () ->
+        log.error {
+          message: 'Request was aborted'
+          parameters: parameters
+        }
 
-          # Set the rate limit allowance using the reddit rate-limit headers.
-          # See https://www.reddit.com/1yxrp7
+        handler()
+
+      # Called when the request was not successful, which is most likely due to
+      # Reddit being down or under maintenance.
+      .on 'fail', (data, response) ->
+        log.error {
+          message: 'Unexpected status code'
+          status: response?.statusCode
+          parameters: parameters
+        }
+
+        handler()
+
+
+      # Called when the request has been completed, regardless of whether it
+      # succeeded. It's important to set the rate limit using failed request
+      # responses as well, as they count towards the allowed usage.
+      .on 'complete', (result, response) =>
+
+        # Set the rate limit allowance using the reddit rate-limit headers.
+        # See https://www.reddit.com/1yxrp7
+        if response
           @setRateLimit(response)
-        )
 
-    catch
-      log.error {
-        message: 'Something went wrong during the request?'
-        parameters: parameters
-      }
-
-      handler()
-      return false
 
 
   # Requests models from reddit.com using given request parameters.
   # Passes models to a handler or `false` if the request was unsuccessful.
   models: (parameters, handler) ->
-
-    log.info {
-      event: 'request.models'
-      parameters: parameters
-    }
 
     # Initialise blank headers
     parameters.headers = parameters.headers or {}
@@ -213,69 +157,43 @@ module.exports = class OAuth2
 
       # Don't make the request if the token is not valid
       if not token
-        log.error {
-          message: 'Access token is not set'
-          parameters: parameters
-        }
-
         return handler()
+
+      # 5s request timeout.
+      parameters.timeout = 5000
+
+      # Disable connection pooling.
+      parameters.agent = false
 
       # User agent should be the only header we need to set for a API requests.
       parameters.headers['User-Agent'] = process.env.USER_AGENT
 
-      # Set the HTTP basic auth header for the request
-      parameters.headers['Authorization'] = "Bearer #{@token.token}"
+      # Set the OAuth2 access token.
+      parameters.accessToken = @token.token
 
+      # Schedule a rate-limited model request, wrapped in a 10 second fallback
+      # timeout in case something goes wrong internally.
       @rate.delay () =>
         request = false
 
-        timeout = setTimeout (
-          () ->
-            if request
-              log.info {
-                event: 'Manual abort!'
-              }
+        cancel = () ->
+          if request
+            request.abort()
+          else
+            handler()
 
-              request.abort()
+        # 10s fallback timeout.
+        timeout = setTimeout cancel, (10 * 1000)
 
-            else
-              log.info {
-                event: 'Manual timeout skipped - request is false?'
-              }
-
-              # Call handler here because it won't be called in abort.
-              handler()
-
-        ), (10 * 1000)
-
-        request = @_models(parameters, (children) -> (
+        request = @_models parameters, (children) ->
           clearTimeout(timeout)
           handler(children)
-        ))
-
-        return
 
 
   # Attempts to set the allowed rate limit using a response
   setRateLimit: (response) ->
     if response?.headers
-      try
-        messages = response.headers['x-ratelimit-remaining']
-        seconds  = response.headers['x-ratelimit-reset']
+      messages = response.headers['x-ratelimit-remaining']
+      seconds  = response.headers['x-ratelimit-reset']
 
-        @rate.setRate(messages, seconds)
-
-        log.info {
-          event: 'ratelimit'
-          messages: messages
-          seconds: seconds
-        }
-
-      catch exception
-        message = 'Failed to set rate limit'
-
-        log.error {
-          message: message
-          headers: response.headers
-          exception: exception
-        }
+      @rate.setRate(messages, seconds)

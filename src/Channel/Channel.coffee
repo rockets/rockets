@@ -21,9 +21,3 @@ module.exports = class Channel
   removeSubscription: (client) ->
     try
       delete @subscriptions[client.id]
-
-    catch exception
-      log.error {
-        message: 'Could not delete subscription',
-        exception: exception,
-      }

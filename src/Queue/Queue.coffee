@@ -5,7 +5,7 @@ module.exports = class Queue
 
   constructor: () ->
     @queue = async.queue (task, next) =>
-        @process.call(@, task, next)
+      @process.call(@, task, next)
 
 
   # Pushes tasks onto the queue.

@@ -16,14 +16,8 @@ module.exports = class SocketClient
 
     # Only send if the socket connection is still open
     if @socket?.readyState is ws.OPEN
-      @socket.send data, (err) ->
-        if err
-          log.error {
-            message: 'Socket send error?'
-            error: err
-          }
-
-      done?()
+      @socket.send data, () ->
+        done?()
 
     else
       if typeof done is 'function'

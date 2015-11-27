@@ -4,9 +4,9 @@ Wraps around bunyan to create a consistent logging interface.
 module.exports = class Log
 
   constructor: () ->
-    @logger = new winston.Logger {
 
-      #
+    # For general logging.
+    @logger = new winston.Logger {
       transports: [
         new (winston.transports.File)({
           name:             'info'
@@ -22,9 +22,31 @@ module.exports = class Log
           handleExceptions: true
         }),
       ],
-
-      #
       exitOnError: false
+    }
+
+    # For logging posts
+    @posts = new winston.Logger {
+      transports: [
+        new (winston.transports.File)({
+          name:             'posts'
+          filename:         'logs/posts.log'
+          level:            'info'
+          prettyPrint:      true
+        }),
+      ],
+    }
+
+    # For logging comments
+    @comments = new winston.Logger {
+      transports: [
+        new (winston.transports.File)({
+          name:             'comments'
+          filename:         'logs/comments.log'
+          level:            'info'
+          prettyPrint:      true
+        }),
+      ],
     }
 
   # Bundle log data into a consistent format.
@@ -44,3 +66,16 @@ module.exports = class Log
   # Log arbitrary arguments to the error log
   error: () ->
     @logger.log 'error', @bundle(arguments)
+
+
+  # Log a model to its respective log.
+  model: (model) ->
+    switch model.kind
+      when 't1' then logger = @comments
+      when 't3' then logger = @posts
+
+    if logger
+      logger.log 'info', @bundle({
+        fullname: model.data.name,
+        pk: parseInt(model.data.id, 36)
+      })

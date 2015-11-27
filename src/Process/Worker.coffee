@@ -15,24 +15,6 @@ module.exports = class Worker
   run: () ->
     @server.listen(port: process.env.PORT)
     process.on 'message', @onMessage.bind(@)
-    # process.on 'error', @onError.bind(@)
-
-    #
-    process.on 'disconnect', () ->
-      log.error {
-        message: 'Parent disconnected?'
-      }
-
-    process.on 'error', () ->
-      log.error {
-        message: 'worker error?'
-      }
-
-  # Called when an error occurred.
-  # See https://nodejs.org/api/child_process.html#child_process_event_error
-  # onError: (err) ->
-    # log.error err
-
 
   # Sends a task to the emit queue which will send the model to the client.
   enqueue: (client, model) ->

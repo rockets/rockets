@@ -89,12 +89,11 @@ module.exports = class SocketServer
     if data.channel in [Channel.POSTS, Channel.COMMENTS]
       return @channels.createChannel(data.channel)
 
-    error = {
-      message: 'Unsupported channel'
+    # Send an error message to the client.
+    client.send {
+      error:
+        message: 'Unsupported channel'
     }
-
-    log.error   {error}
-    client.send {error}
 
 
   # Attempts to parse an incoming message.
@@ -102,14 +101,13 @@ module.exports = class SocketServer
   parseMessage: (message, client) ->
     try
       return JSON.parse(message)
-    catch err
+    catch e
 
-      error = {
-        message: err.message,
+      # Send an error message to the client.
+      client.send {
+        error:
+          message: e.message,
       }
-
-      log.error   {error}
-      client.send {error}
 
 
   # Handles the data of a parsed message.
