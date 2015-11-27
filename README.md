@@ -12,11 +12,11 @@ You will receive JSON models exactly as they appear in reddit listings, ie. with
 
 #### Demo
 
-See [rockets-demo](https://github.com/rtheunissen/rockets-demo).
+See [rockets/demo](https://github.com/rockets/demo).
 
 #### Client
 
-See [rockets-client](https://github.com/rtheunissen/rockets-client).
+See [rockets/client](https://github.com/rockets/client).
 
 ## Usage
 
@@ -110,7 +110,7 @@ open a new connection when you need a strict boundary between subscriptions.
 
 There are a few ways to resupply and assist the CC:
 
-- Use filters to avoid receiving unwanted data.
+- Use rules to avoid receiving unwanted data.
 - Donate a few dollars to help cover server costs.
 - Sponsor this app if you have a lot of bandwidth at your disposal.
 
