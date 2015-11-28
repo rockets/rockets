@@ -53,32 +53,33 @@ describe 'SocketServer', ->
       })
 
 
-  describe 'getFilters (using deprected filter syntax)', ->
+  describe 'getFilters (deprecated)', ->
 
     it 'should produce post filter for posts channel', ->
       s = new SocketServer()
       client = new FakeClient()
       data = {channel: 'posts', filters: { nsfw: false }}
-      filter = s.getFilters(data, client)
-      assert.deepEqual(filter.include.rules, { nsfw: [ false ] })
+      filters = s.getFilters(data, client)
+      assert.deepEqual(filters.include.rules, { nsfw: [ false ] })
+      assert.isUndefined(filters.exclude)
       assert.isUndefined(client.last)
 
     it 'should produce comment filter for comments channel', ->
       s = new SocketServer()
       client = new FakeClient()
       data = {channel: 'comments', filters: { root: false }}
-      filter = s.getFilters(data, client)
-      assert.deepEqual(filter.include.rules, { root: [ false ] })
+      filters = s.getFilters(data, client)
+      assert.deepEqual(filters.include.rules, { root: [ false ] })
+      assert.isUndefined(filters.exclude)
       assert.isUndefined(client.last)
 
     it 'should produce nothing filter for invalid channel', ->
       s = new SocketServer()
       client = new FakeClient()
       data = {channel: 'nope', filters: { something: false }}
-      filter = s.getFilters(data, client)
-      assert.isUndefined(filter)
+      filters = s.getFilters(data, client)
+      assert.isUndefined(filters)
       assert.isUndefined(client.last)
-
 
 
   describe 'getFilters', ->
