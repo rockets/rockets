@@ -69,8 +69,8 @@ module.exports = class SocketServer
         return
 
     # Check that filters were actually provided, where empty is false.
-    include = if Object.keys(data.include or {}) then data.include
-    exclude = if Object.keys(data.exclude or {}) then data.exclude
+    include = if Object.keys(data.include or {}).length then data.include
+    exclude = if Object.keys(data.exclude or {}).length then data.exclude
 
     return {
       include: if include then new filter(include) else undefined
