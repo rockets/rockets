@@ -1,4 +1,4 @@
-![Rockets](header.gif) [![Author](http://img.shields.io/badge/author-u%2Frtheunissen-336699.svg?style=flat-square)](https://reddit.com/u/rtheunissen) [![Support](https://img.shields.io/badge/support-donate-399c99.svg?style=flat-square)](https://plasso.co/rudolf.theunissen@gmail.com) [![Stability](https://img.shields.io/badge/status-running-66BB6A.svg?style=flat-square)]()
+![Rockets](header.gif) [![Author](http://img.shields.io/badge/author-@rudi_theunissen-00aced.svg?style=flat-square)](https://twitter.com/rudi_theunissen) [![Support](https://img.shields.io/badge/support-donate-399c99.svg?style=flat-square)](https://plasso.co/rudolf.theunissen@gmail.com) [![Status](https://img.shields.io/badge/status-running-4CAF50.svg?style=flat-square)]()
 ---
 
 **Mission**
@@ -108,11 +108,10 @@ open a new connection when you need a strict boundary between subscriptions.
 
 ## Support
 
-There are a few ways to resupply and assist the CC:
+There are a few ways to resupply and assist the command centre:
 
 - Use rules to avoid receiving unwanted data.
-- Donate a few dollars to help cover server costs.
-- Sponsor this app if you have a lot of bandwidth at your disposal.
+- [Donate](https://plasso.co/rudolf.theunissen@gmail.com) a few dollars to help cover server costs.
 
 ## Credits
 
