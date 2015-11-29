@@ -46,15 +46,21 @@ describe 'PostFilter', ->
 
 
   describe 'subreddit', ->
-    match('subreddit', model.data.subreddit = 'aww')
+    model.data.subreddit = "aww"
+    match('subreddit', 'aww')
+    match('subreddit', 'AWW')
 
 
   describe 'author', ->
-    match('author', model.data.author = 'me')
+    model.data.author = 'me'
+    match('author', 'me')
+    match('author', 'ME')
 
 
   describe 'domain', ->
-    match('domain', model.data.domain = 'redd.it')
+    model.data.domain = 'redd.it'
+    match('domain', 'redd.it')
+    match('domain', 'Redd.it')
 
 
   describe 'url', ->

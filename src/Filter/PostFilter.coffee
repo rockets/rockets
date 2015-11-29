@@ -6,16 +6,26 @@ module.exports = class PostFilter extends Filter
   # These are the supported keys and expected types for this filter.
   schema: () ->
     contains:     Filter.REGEX
-    author:       Filter.STRING
-    subreddit:    Filter.STRING
-    domain:       Filter.STRING
-    url:          Filter.STRING
+    subreddit:    Filter.STRING_I
+    author:       Filter.STRING_I
+    domain:       Filter.STRING_I
+    url:          Filter.STRING_I
     nsfw:         Filter.BOOLEAN
 
 
   # Checks if a post contains any of the patterns in the rule.
-  contains: (post, regex) ->
-    return regex and regex.test("#{post.data.title} #{post.data.selftext}")
+  contains: (post, rule) ->
+    return @check(rule, "#{post.data.title} #{post.data.selftext}")
+
+
+  # Checks if a post's subreddit matches any of the values in the rule.
+  subreddit: (post, rule) ->
+    return @check(rule, post.data.subreddit)
+
+
+  # Checks if a post's user/author matches any of the values in the rule.
+  author: (post, rule) ->
+    return @check(rule, post.data.author)
 
 
   # Checks if a post's domain matches any of the domains in the rule.

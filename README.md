@@ -40,21 +40,23 @@ Subscriptions are sent to `ws://rockets.cc:3210` as JSON in the following format
 All rules can be provided as either a single value or an array of values.
 A rule is considered a match if any of the values match the corresponding value in the model.
 
+*Note: all string and regular expression rules are case-insensitive unless explicitly stated otherwise.*
+
 #### Comments
 
 | Key       | Type            | Description                                                      |
 |-----------|-----------------|------------------------------------------------------------------|
-| contains  | string (regex)  | Comment body (markdown), case-insensitive                        |
+| contains  | string (regex)  | Comment body (markdown)                  |
 | subreddit | string          | Subreddit in which the comment was made, eg. "subreddit"         |
 | author    | string          | The user who made the comment, eg. "username"                    |
-| post      | string          | Comments that are replies to a specific post, eg. "t3_abcd"      |
+| post      | string (exact)          | Comments that are replies to a specific post, eg. "t3_abcd"      |
 | root      | boolean         | Comments that are not replies to other comments                  |
 
 #### Posts
 
 | Key       | Type            | Description                                                      |
 |-----------|-----------------|------------------------------------------------------------------|
-| contains  | string (regex)  | Link title and selftext (markdown), case-insensitive             |
+| contains  | string (regex)  | Link title and selftext (markdown)
 | subreddit | string          | Subreddit in which the post was made, eg. "subreddit"            |
 | author    | string          | The user who made the post, eg. "username"                       |
 | domain    | string          | Link's domain, or "self.subreddit" if it's a selfpost            |

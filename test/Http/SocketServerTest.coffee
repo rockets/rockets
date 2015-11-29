@@ -60,7 +60,7 @@ describe 'SocketServer', ->
       client = new FakeClient()
       data = {channel: 'posts', filters: { nsfw: false }}
       filters = s.getFilters(data, client)
-      assert.deepEqual(filters.include.rules, { nsfw: [ false ] })
+      assert.deepEqual(filters.include.rules, {nsfw: { pass: [ false ], type: "boolean"}})
       assert.isUndefined(filters.exclude)
       assert.isUndefined(client.last)
 
@@ -69,7 +69,7 @@ describe 'SocketServer', ->
       client = new FakeClient()
       data = {channel: 'comments', filters: { root: false }}
       filters = s.getFilters(data, client)
-      assert.deepEqual(filters.include.rules, { root: [ false ] })
+      assert.deepEqual(filters.include.rules, { root: { pass: [ false ], type: "boolean" }})
       assert.isUndefined(filters.exclude)
       assert.isUndefined(client.last)
 
@@ -89,7 +89,7 @@ describe 'SocketServer', ->
       client = new FakeClient()
       data = {channel: 'posts', include: { nsfw: false }}
       filters = s.getFilters(data, client)
-      assert.deepEqual(filters.include.rules, { nsfw: [ false ] })
+      assert.deepEqual(filters.include.rules, { nsfw: { pass: [ false ], type: "boolean" }})
       assert.isUndefined(filters.exclude)
       assert.isUndefined(client.last)
 
@@ -98,7 +98,7 @@ describe 'SocketServer', ->
       client = new FakeClient()
       data = {channel: 'comments', include: { root: false }}
       filters = s.getFilters(data, client)
-      assert.deepEqual(filters.include.rules, { root: [ false ] })
+      assert.deepEqual(filters.include.rules, { root: { pass: [ false ], type: "boolean" }})
       assert.isUndefined(filters.exclude)
       assert.isUndefined(client.last)
 
@@ -107,7 +107,7 @@ describe 'SocketServer', ->
       client = new FakeClient()
       data = {channel: 'posts', exclude: { nsfw: false }}
       filters = s.getFilters(data, client)
-      assert.deepEqual(filters.exclude.rules, { nsfw: [ false ] })
+      assert.deepEqual(filters.exclude.rules, { nsfw: { pass: [ false ], type: "boolean" }})
       assert.isUndefined(filters.include)
       assert.isUndefined(client.last)
 
@@ -116,7 +116,7 @@ describe 'SocketServer', ->
       client = new FakeClient()
       data = {channel: 'comments', exclude: { root: false }}
       filters = s.getFilters(data, client)
-      assert.deepEqual(filters.exclude.rules, { root: [ false ] })
+      assert.deepEqual(filters.exclude.rules, { root: { pass: [ false ], type: "boolean" }})
       assert.isUndefined(filters.include)
       assert.isUndefined(client.last)
 
@@ -125,7 +125,7 @@ describe 'SocketServer', ->
       client = new FakeClient()
       data = {channel: 'posts', exclude: { nsfw: false }}
       filters = s.getFilters(data, client)
-      assert.deepEqual(filters.exclude.rules, { nsfw: [ false ] })
+      assert.deepEqual(filters.exclude.rules, { nsfw: { pass: [ false ], type: "boolean" }})
       assert.isUndefined(filters.include)
       assert.isUndefined(client.last)
 
@@ -134,8 +134,8 @@ describe 'SocketServer', ->
       client = new FakeClient()
       data = {channel: 'comments', exclude: { root: false }, include: { root: false }}
       filters = s.getFilters(data, client)
-      assert.deepEqual(filters.exclude.rules, { root: [ false ] })
-      assert.deepEqual(filters.include.rules, { root: [ false ] })
+      assert.deepEqual(filters.exclude.rules, { root: { pass: [ false ], type: "boolean" }})
+      assert.deepEqual(filters.include.rules, { root: { pass: [ false ], type: "boolean" }})
       assert.isUndefined(client.last)
 
     it 'should produce nothing filter for invalid channel', ->

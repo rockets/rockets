@@ -45,15 +45,24 @@ describe 'CommentFilter', ->
 
 
   describe 'subreddit', ->
-    match('subreddit', model.data.subreddit = 'aww')
+    model.data.subreddit = "aww"
+    match('subreddit', 'aww')
+    match('subreddit', 'AWW')
 
 
   describe 'author', ->
-    match('author', model.data.author = 'me')
+    model.data.author = 'me'
+    match('author', 'me')
+    match('author', 'ME')
 
 
   describe 'post', ->
-    match('post', model.data.link_id = 'abcdef')
+    model.data.link_id = 'a'
+    pass('post', 'a')
+    pass('post', ['a'])
+    pass('post', ['a', 'A'])
+    fail('post', 'A')
+    fail('post', ['A'])
 
 
   describe 'root', ->
