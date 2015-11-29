@@ -29,10 +29,10 @@ module.exports = class Log
     @posts = new winston.Logger
       transports: [
         new (winston.transports.File)({
-          name:             'posts'
-          filename:         'logs/posts.log'
-          level:            'info'
-          timestamp:        false
+          name:      'posts'
+          filename:  'logs/posts.log'
+          level:     'info'
+          timestamp: false
         }),
       ],
 
@@ -40,20 +40,20 @@ module.exports = class Log
     @comments = new winston.Logger
       transports: [
         new (winston.transports.File)({
-          name:             'comments'
-          filename:         'logs/comments.log'
-          level:            'info'
-          timestamp:        false
+          name:      'comments'
+          filename:  'logs/comments.log'
+          level:     'info'
+          timestamp: false
         }),
       ],
 
   # Bundle log data into a consistent format.
   bundle: (data) ->
     return {
-      date: new Date().toLocaleDateString(),
-      time: new Date().toTimeString(),
-      unix: Date.now() // 1000,
-      data: if data.length is 1 then data[0] else data,
+      date: new Date().toLocaleDateString()
+      time: new Date().toTimeString()
+      unix: Date.now() // 1000
+      data: if data.length is 1 then data[0] else data
     }
 
 
