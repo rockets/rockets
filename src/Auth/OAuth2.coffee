@@ -41,6 +41,7 @@ module.exports = class OAuth2
       # Called when an access toen
       .on 'timeout', (ms) ->
         log.error 'Access token request timeout'
+        callback()
 
       # Called when the request errored, which is not the same as a failed
       # request. This should indicate that something should be fixed.
