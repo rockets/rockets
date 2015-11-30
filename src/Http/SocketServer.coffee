@@ -110,10 +110,11 @@ module.exports = class SocketServer
     return Buffer.byteLength(message, 'utf8') < SocketServer.MAX_MESSAGE_SIZE
 
 
+  # Parses a JSON subscription message and sends an error message to the client
+  # if parsing the message failed.
   parseJson: (json, client) ->
     try
       return JSON.parse(json)
-
     catch e
       @clientError client,
         message: "Could not parse subscription: #{e.message}"
