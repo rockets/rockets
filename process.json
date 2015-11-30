@@ -6,7 +6,6 @@
   "args"             : [],
   "node_args"        : [
     "--stack-size=8192",
-    "--nouse-idle-notification",
     "--expose-gc"
   ],
   "error_file"       : "logs/process-error.log",

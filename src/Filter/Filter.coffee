@@ -53,10 +53,10 @@ module.exports = class Filter
     if not pass then return false
 
     # Handle the regex test first because it doesn't operate on an array.
-    if type is Filter.REGEX then return pass.test(value)
+    if (type is Filter.REGEX) then return pass.test(value)
 
     # Convert the value to lowercase if the rule is case insensitive.
-    if type is Filter.STRING_I then value = value.toLowerCase()
+    if (type is Filter.STRING_I and value) then value = value.toLowerCase()
 
     # Pass if either the rule is empty or the value is in the rule.
     return pass.length is 0 or value in pass

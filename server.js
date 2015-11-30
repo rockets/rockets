@@ -23,6 +23,6 @@ log = new Log();
 // Create a new master process if master or create a worker if it's a fork.
 cluster.isMaster ? new Master() : new Worker();
 
-// Manual GC every 30 seconds.
+// Manual GC every 15 seconds.
 // Requires --expose-gc
-setInterval(global.gc, 30 * 1000);
+setInterval(global.gc, 15 * 1000);

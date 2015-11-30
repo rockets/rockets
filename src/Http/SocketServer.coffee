@@ -6,6 +6,8 @@ Socket server, responsible for:
 ###
 module.exports = class SocketServer
 
+  @MAX_MESSAGE_SIZE = 1000 * 1000  # 1Mb
+
   constructor: () ->
     @channels = new ChannelRepository()
 
@@ -52,7 +54,7 @@ module.exports = class SocketServer
 
   # Called when an incoming message is received.
   onMessage: (message, client) ->
-    if data = @parseMessage(message, client) then @handleData(data, client)
+    if (data = @parseMessage(message, client)) then @handleData(data, client)
 
 
   # Determines and returns and appropriate filter for the given data.
@@ -78,6 +80,19 @@ module.exports = class SocketServer
     }
 
 
+  # Log error and forward to client
+  clientError: (client, error) ->
+
+    # Log client error.
+    log.error 'client.error',
+      client: client.id
+      error: error
+
+    # Send error to client
+    client.send
+      error: error
+
+
   # Determines and returns a channel instance for the given data.
   # Sends an error to the client if the channel is not supported.
   getChannel: (data, client) ->
@@ -85,23 +100,40 @@ module.exports = class SocketServer
       return @channels.createChannel(data.channel)
 
     # Send an error message to the client.
-    client.send
-      error:
-        message: 'Unsupported channel'
-        options: [Channel.POSTS, Channel.COMMENTS]
+    @clientError client,
+      message: 'Unsupported channel'
+      options: [Channel.POSTS, Channel.COMMENTS]
+
+
+  # Guards against massive JSON messages.
+  validMessageSize: (message) ->
+    return Buffer.byteLength(message, 'utf8') < SocketServer.MAX_MESSAGE_SIZE
+
+
+  parseJson: (json, client) ->
+    try
+      return JSON.parse(json)
+
+    catch e
+      @clientError client,
+        message: "Could not parse subscription: #{e.message}"
 
 
   # Attempts to parse an incoming message.
   # Sends an error to the client if the message could not be parsed.
   parseMessage: (message, client) ->
-    try
-      return JSON.parse(message)
-    catch e
 
-      # Send an error message to the client.
-      client.send
-        error:
-          message: "Could not parse subscription: #{e.message}"
+    # Log the raw subscription.
+    log.info 'subscription.raw',
+      data: message
+      client: client.id
+
+    if @validMessageSize(message)
+      return @parseJson message, client
+
+    # Send an error message to the client.
+    @clientError client,
+      message: 'JSON message too large!'
 
 
   # Handles the data of a parsed message.
