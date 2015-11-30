@@ -14,6 +14,22 @@ module.exports = class OAuth2
     @token = null
 
 
+  # Wraps around a request to act as a fallback timeout in case something goes
+  # wrong with the request resulting in the callback not being called.
+  timeoutFallback: (callback, make) ->
+    log.info "request.make"
+
+    # Make the request, providing a handle to abort with later.
+    request = make()
+
+    cancel = () ->
+      log.info "request.abort.fallback"
+      request.abort()
+      callback()
+
+    return setTimeout cancel, (10 * 1000)  # 10s
+
+
   # Wraps authentication around a callback which expects an access token.
   authenticate: (callback) ->
 
@@ -32,34 +48,38 @@ module.exports = class OAuth2
       # 5s request timeout
       timeout: 5000
 
-    restler.post('https://reddit.com/api/v1/access_token', parameters)
+    # Wrap a fallback timeout in case something goes wrong internally.
+    timeout = @timeoutFallback callback, () =>
+      restler.post('https://reddit.com/api/v1/access_token', parameters)
 
-      # Called when an access token request is successful.
-      .on 'success', (data, response) =>
-        @token = new AccessToken(data)
+        # Called when an access token request is successful.
+        .on 'success', (data, response) =>
+          @token = new AccessToken(data)
 
-      # Called when an access toen
-      .on 'timeout', (ms) ->
-        log.error 'Access token request timeout'
-        callback()
+        # Called when an access toen
+        .on 'timeout', (ms) ->
+          log.error 'Access token request timeout'
+          clearTimeout(timeout)
+          callback()
 
-      # Called when the request errored, which is not the same as a failed
-      # request. This should indicate that something should be fixed.
-      .on 'error', (err, response) ->
-        log.error 'Unexpected error during access token request',
-          status: response?.statusCode
-          error: err
+        # Called when the request errored, which is not the same as a failed
+        # request. This should indicate that something should be fixed.
+        .on 'error', (err, response) ->
+          log.error 'Unexpected error during access token request',
+            status: response?.statusCode
+            error: err
 
-      # Called when the request was not successful, which is most likely due to
-      # Reddit being down or under maintenance.
-      .on 'fail', (data, response) ->
-        log.error 'Unexpected status code for access token request',
-          status: response?.statusCode
+        # Called when the request was not successful, which is most likely due
+        # to Reddit being down or under maintenance.
+        .on 'fail', (data, response) ->
+          log.error 'Unexpected status code for access token request',
+            status: response?.statusCode
 
-      # Called when the request has completed, regardless of whether it was
-      # successful. Use whatever token state we currently have.
-      .on 'complete', (result, response) =>
-        callback(@token)
+        # Called when the request has completed, regardless of whether it was
+        # successful. Use whatever token state we currently have.
+        .on 'complete', (result, response) =>
+          clearTimeout(timeout)
+          callback(@token)
 
 
   _models: (parameters, handler) ->
@@ -147,21 +167,15 @@ module.exports = class OAuth2
       # Set the OAuth2 access token.
       parameters.accessToken = @token.token
 
-      # Schedule a rate-limited model request, wrapped in a 10 second fallback
-      # timeout in case something goes wrong internally.
+      # Schedule a rate limited request task.
       @rate.delay () =>
-        request = false
 
-        cancel = () ->
-          if request then request.abort()
-          return handler()
-
-        # 10s fallback timeout.
-        timeout = setTimeout cancel, (10 * 1000)
-
-        request = @_models parameters, (children) ->
-          clearTimeout(timeout)
-          handler(children)
+        # Wrap request in a 10 second fallback timeout in case something goes
+        # wrong internally (this should never happen though).
+        timeout = @timeoutFallback handler, () =>
+          @_models parameters, (children) ->
+            clearTimeout(timeout)
+            handler(children)
 
 
   # Attempts to set the allowed rate limit using a response
