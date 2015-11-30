@@ -53,7 +53,7 @@ module.exports = class Log
       date: new Date().toLocaleDateString()
       time: new Date().toTimeString()
       unix: Date.now() // 1000
-      data: if data.length is 1 then data[0] else data
+      data: (if data and data.length is 1) then data[0] else data
     }
 
 
@@ -73,8 +73,9 @@ module.exports = class Log
       when 't1' then logger = @comments
       when 't3' then logger = @posts
 
-    logger.log 'info', @bundle({
-      fullname: model.data.name
-      pk: parseInt(model.data.id, 36)
-      latency: (Date.now() // 1000) - model.data.created_utc
-    })
+    if logger
+      logger.log 'info', @bundle({
+        fullname: model.data.name
+        pk: parseInt(model.data.id, 36)
+        latency: (Date.now() // 1000) - model.data.created_utc
+      })
