@@ -53,7 +53,7 @@ module.exports = class Log
       date: new Date().toLocaleDateString()
       time: new Date().toTimeString()
       unix: Date.now() // 1000
-      data: (if data and data.length is 1) then data[0] else data
+      data: if data and data.length is 1 then data[0] else data
     }
 
 
