@@ -112,62 +112,63 @@ module.exports = class OAuth2
 
         # Wrap request in a 10 second fallback timeout in case something goes
         # wrong internally (this should never happen though).
-        timeout = @fallback handler, restler.request(parameters.url, parameters)
+        timeout = @fallback handler, () =>
+          restler.request(parameters.url, parameters)
 
-          # Called when the request was successful.
-          .on 'success', (data, response) ->
-            try
-              parsed = JSON.parse(data)
+            # Called when the request was successful.
+            .on 'success', (data, response) ->
+              try
+                parsed = JSON.parse(data)
 
-              # Make sure that the parsed JSON is also in the expected format,
-              # which should be a standard reddit 'Listing'.
-              if not parsed.data or 'children' not of parsed.data
-                return handler()
+                # Make sure that the parsed JSON is also in the expected format,
+                # which should be a standard reddit 'Listing'.
+                if not parsed.data or 'children' not of parsed.data
+                  return handler()
 
-              # Reddit doesn't always send results in the right order. This will
-              # sort the models by ascending ID, ie. from oldest to newest.
-              handler parsed.data.children.sort (a, b) ->
-                return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
+                # Reddit doesn't always send results in the right order.
+                # Sort the models by ascending ID, ie. from oldest to newest.
+                handler parsed.data.children.sort (a, b) ->
+                  return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
 
-            catch exception
+              catch exception
+                handler()
+
+            # Called when the request errored, which is not the same as a failed
+            # request. This should indicate that something should be fixed.
+            .on 'error', (err, response) ->
+              log.error 'Unexpected request error',
+                status: response?.statusCode
+                error: err
+
               handler()
 
-          # Called when the request errored, which is not the same as a failed
-          # request. This should indicate that something should be fixed.
-          .on 'error', (err, response) ->
-            log.error 'Unexpected request error',
-              status: response?.statusCode
-              error: err
+            # Called when the request times out.
+            .on 'timeout', (ms) ->
+              log.error 'Request timed out',
+                parameters: parameters
 
-            handler()
+              clearTimeout(timeout)
+              handler()
 
-          # Called when the request times out.
-          .on 'timeout', (ms) ->
-            log.error 'Request timed out',
-              parameters: parameters
+            # Called when the request was not successful, which is most likely
+            # due to Reddit being down or under maintenance.
+            .on 'fail', (data, response) ->
+              log.error 'Unexpected status code',
+                status: response?.statusCode
+                parameters: parameters
 
-            clearTimeout(timeout)
-            handler()
+              handler()
 
-          # Called when the request was not successful, which is most likely due
-          # to Reddit being down or under maintenance.
-          .on 'fail', (data, response) ->
-            log.error 'Unexpected status code',
-              status: response?.statusCode
-              parameters: parameters
+            # Called when the request has been completed, regardless of whether
+            # it succeeded. It's important to set the rate limit using failed
+            # responses as well, as they count towards the allowed usage.
+            .on 'complete', (result, response) =>
+              clearTimeout(timeout)
 
-            handler()
-
-          # Called when the request has been completed, regardless of whether it
-          # succeeded. It's important to set the rate limit using failed request
-          # responses as well, as they count towards the allowed usage.
-          .on 'complete', (result, response) =>
-            clearTimeout(timeout)
-
-            # Set the rate limit allowance using the reddit rate-limit headers.
-            # See https://www.reddit.com/1yxrp7
-            if response
-              @setRateLimit(response)
+              # Set the rate limit allowance using the reddit ratelimit headers.
+              # See https://www.reddit.com/1yxrp7
+              if response
+                @setRateLimit(response)
 
 
   # Attempts to set the allowed rate limit using a response
