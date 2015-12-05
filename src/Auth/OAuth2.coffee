@@ -16,16 +16,15 @@ module.exports = class OAuth2
 
   # Wraps around a request to act as a fallback timeout in case something goes
   # wrong with the request resulting in the callback not being called.
-  timeoutFallback: (callback, make) ->
-    log.info "request.make"
+  fallback: (callback, make) ->
+    log.info 'request.make'
 
     # Make the request, providing a handle to abort with later.
     request = make()
 
     cancel = () ->
-      log.info "request.abort.fallback"
+      log.info 'request.abort.fallback'
       request.abort()
-      callback()
 
     return setTimeout cancel, (10 * 1000)  # 10s
 
@@ -49,7 +48,7 @@ module.exports = class OAuth2
       timeout: 5000
 
     # Wrap a fallback timeout in case something goes wrong internally.
-    timeout = @timeoutFallback callback, () =>
+    timeout = @fallback callback, () =>
       restler.post('https://reddit.com/api/v1/access_token', parameters)
 
         # Called when an access token request is successful.
@@ -80,65 +79,6 @@ module.exports = class OAuth2
         .on 'complete', (result, response) =>
           clearTimeout(timeout)
           callback(@token)
-
-
-  _models: (parameters, handler) ->
-    return restler.request(parameters.url, parameters)
-
-      # Called when the request was successful.
-      .on 'success', (data, response) ->
-        try
-          parsed = JSON.parse(data)
-
-          # Make sure that the parsed JSON is also in the expected format, which
-          # should be a standard reddit 'Listing'.
-          if not parsed.data or 'children' not of parsed.data
-            return handler()
-
-          # Reddit doesn't always send results in the right order. This will
-          # sort the models by ascending ID, ie. from oldest to newest.
-          handler parsed.data.children.sort (a, b) ->
-            return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
-
-        catch exception
-          handler()
-
-      # Called when the request errored, which is not the same as a failed
-      # request. This should indicate that something should be fixed.
-      .on 'error', (err, response) ->
-        log.error 'Unexpected request error',
-          status: response?.statusCode
-          error: err
-
-        handler()
-
-      # Called when the request times out.
-      .on 'timeout', (ms) ->
-        log.error 'Request timed out',
-          parameters: parameters
-
-        handler()
-
-      # Called when the request was not successful, which is most likely due to
-      # Reddit being down or under maintenance.
-      .on 'fail', (data, response) ->
-        log.error 'Unexpected status code',
-          status: response?.statusCode
-          parameters: parameters
-
-        handler()
-
-
-      # Called when the request has been completed, regardless of whether it
-      # succeeded. It's important to set the rate limit using failed request
-      # responses as well, as they count towards the allowed usage.
-      .on 'complete', (result, response) =>
-
-        # Set the rate limit allowance using the reddit rate-limit headers.
-        # See https://www.reddit.com/1yxrp7
-        if response
-          @setRateLimit(response)
-
 
 
   # Requests models from reddit.com using given request parameters.
@@ -172,10 +112,62 @@ module.exports = class OAuth2
 
         # Wrap request in a 10 second fallback timeout in case something goes
         # wrong internally (this should never happen though).
-        timeout = @timeoutFallback handler, () =>
-          @_models parameters, (children) ->
+        timeout = @fallback handler, restler.request(parameters.url, parameters)
+
+          # Called when the request was successful.
+          .on 'success', (data, response) ->
+            try
+              parsed = JSON.parse(data)
+
+              # Make sure that the parsed JSON is also in the expected format,
+              # which should be a standard reddit 'Listing'.
+              if not parsed.data or 'children' not of parsed.data
+                return handler()
+
+              # Reddit doesn't always send results in the right order. This will
+              # sort the models by ascending ID, ie. from oldest to newest.
+              handler parsed.data.children.sort (a, b) ->
+                return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
+
+            catch exception
+              handler()
+
+          # Called when the request errored, which is not the same as a failed
+          # request. This should indicate that something should be fixed.
+          .on 'error', (err, response) ->
+            log.error 'Unexpected request error',
+              status: response?.statusCode
+              error: err
+
+            handler()
+
+          # Called when the request times out.
+          .on 'timeout', (ms) ->
+            log.error 'Request timed out',
+              parameters: parameters
+
             clearTimeout(timeout)
-            handler(children)
+            handler()
+
+          # Called when the request was not successful, which is most likely due
+          # to Reddit being down or under maintenance.
+          .on 'fail', (data, response) ->
+            log.error 'Unexpected status code',
+              status: response?.statusCode
+              parameters: parameters
+
+            handler()
+
+          # Called when the request has been completed, regardless of whether it
+          # succeeded. It's important to set the rate limit using failed request
+          # responses as well, as they count towards the allowed usage.
+          .on 'complete', (result, response) =>
+            clearTimeout(timeout)
+
+            # Set the rate limit allowance using the reddit rate-limit headers.
+            # See https://www.reddit.com/1yxrp7
+            if response
+              @setRateLimit(response)
 
 
   # Attempts to set the allowed rate limit using a response

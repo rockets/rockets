@@ -69,13 +69,13 @@ module.exports = class Log
 
   # Log a model to its respective log.
   model: (model) ->
-    switch model.kind
-      when 't1' then logger = @comments
-      when 't3' then logger = @posts
+    # switch model.kind
+    #   when 't1' then logger = @comments
+    #   when 't3' then logger = @posts
 
-    if logger
-      logger.log 'info', @bundle({
-        fullname: model.data.name
-        pk: parseInt(model.data.id, 36)
-        latency: (Date.now() // 1000) - model.data.created_utc
-      })
+    # if logger
+    #   logger.log 'info', @bundle({
+    #     fullname: model.data.name
+    #     pk: parseInt(model.data.id, 36)
+    #     latency: (Date.now() // 1000) - model.data.created_utc
+    #   })
