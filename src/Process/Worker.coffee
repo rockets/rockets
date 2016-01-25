@@ -27,6 +27,12 @@ module.exports = class Worker
   sendToChannel: (channel, model) ->
     for clientId, subscription of channel.subscriptions or []
       if subscription.match model
+        log.info 'worker.enqueue', {
+          model: model.data.name,
+          client: subscription.client,
+          channel: channel,
+        }
+
         @enqueue subscription.client, model
 
   # Handles a message received from the model queue, which contains a 'channel'
