@@ -15,6 +15,11 @@ module.exports = class Master
     cluster.fork() for _ in [0...(os.cpus().length-1)]
 
     cluster.on 'exit', (worker, code, signal) ->
+      log.info 'process.master.exit', {
+        worker: worker.process.pid,
+        code: code,
+        signal: signal,
+      }
 
       # Fork again because the worker died.
       cluster.fork()

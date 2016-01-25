@@ -59,6 +59,9 @@ module.exports = class Task
 
   # Pushes models onto the model queue.
   enqueue: (models) ->
+    log.info 'models.received', {
+      count: models.length,
+    }
     @queue.push models
 
 

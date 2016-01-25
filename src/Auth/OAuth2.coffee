@@ -127,8 +127,10 @@ module.exports = class OAuth2
 
                 # Reddit doesn't always send results in the right order.
                 # Sort the models by ascending ID, ie. from oldest to newest.
-                handler parsed.data.children.sort (a, b) ->
+                models = parsed.data.children.sort (a, b) ->
                   return parseInt(a.data.id, 36) - parseInt(b.data.id, 36)
+
+                handler(models)
 
               catch exception
                 handler()
