@@ -27,10 +27,11 @@ module.exports = class Worker
   sendToChannel: (channel, model) ->
     for clientId, subscription of channel.subscriptions or []
       if subscription.match model
+
         log.info 'worker.enqueue', {
           model: model.data.name,
           client: subscription.client.id,
-          channel: channel,
+          channel: channel.name,
         }
 
         @enqueue subscription.client, model
