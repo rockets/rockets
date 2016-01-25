@@ -29,7 +29,7 @@ module.exports = class Worker
       if subscription.match model
         log.info 'worker.enqueue', {
           model: model.data.name,
-          client: subscription.client,
+          client: subscription.client.id,
           channel: channel,
         }
 
