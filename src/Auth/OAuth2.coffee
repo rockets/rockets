@@ -37,6 +37,9 @@ module.exports = class OAuth2
       return callback(@token)
 
     parameters =
+      headers: {
+        'User-Agent': process.env.USER_AGENT
+      }
       username: process.env.CLIENT_ID
       password: process.env.CLIENT_SECRET
       data:
