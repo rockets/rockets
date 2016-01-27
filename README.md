@@ -1,4 +1,4 @@
-![Rockets](header.gif) [![Author](http://img.shields.io/badge/author-@rudi_theunissen-00aced.svg?style=flat-square)](https://twitter.com/rudi_theunissen) [![Support](https://img.shields.io/badge/support-donate-399c99.svg?style=flat-square)](https://plasso.co/rudolf.theunissen@gmail.com) [![Status](https://img.shields.io/badge/status-paused-333333.svg?style=flat-square)]()
+![Rockets](header.gif) [![Author](http://img.shields.io/badge/author-@rudi_theunissen-00aced.svg?style=flat-square)](https://twitter.com/rudi_theunissen) [![Support](https://img.shields.io/badge/support-donate-399c99.svg?style=flat-square)](https://plasso.co/rudolf.theunissen@gmail.com) [![Status](https://img.shields.io/badge/status-running-4CAF50.svg?style=flat-square)]()
 ---
 
 **Mission**
