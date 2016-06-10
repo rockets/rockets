@@ -37,6 +37,9 @@ module.exports = class OAuth2
       return callback(@token)
 
     parameters =
+      headers: {
+        'User-Agent': process.env.USER_AGENT
+      }
       username: process.env.CLIENT_ID
       password: process.env.CLIENT_SECRET
       data:
@@ -49,7 +52,7 @@ module.exports = class OAuth2
 
     # Wrap a fallback timeout in case something goes wrong internally.
     timeout = @fallback callback, () =>
-      restler.post('https://reddit.com/api/v1/access_token', parameters)
+      restler.post('https://www.reddit.com/api/v1/access_token', parameters)
 
         # Called when an access token request is successful.
         .on 'success', (data, response) =>
