@@ -146,11 +146,9 @@ module.exports = class OAuth2
 
             # Called when the request times out.
             .on 'timeout', (ms) ->
+              clearTimeout(timeout)
               log.error 'Request timed out',
                 parameters: parameters
-
-              clearTimeout(timeout)
-              handler()
 
             # Called when the request was not successful, which is most likely
             # due to Reddit being down or under maintenance.

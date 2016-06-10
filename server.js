@@ -25,4 +25,4 @@ cluster.isMaster ? new Master() : new Worker();
 
 // Manual GC every 15 seconds.
 // Requires --expose-gc
-setInterval(global.gc, 15 * 1000);
+// setInterval(global.gc, 15 * 1000);

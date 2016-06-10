@@ -5,8 +5,9 @@
   "script"           : "server.js",
   "args"             : [],
   "node_args"        : [
-    "--stack-size=8192",
-    "--expose-gc"
+    "--max_old_space_size=8192",
+    "--max_new_space_size=8192",
+    "--stack-size=8192"
   ],
   "error_file"       : "logs/process-error.log",
   "out_file"         : "logs/process-info.log",
