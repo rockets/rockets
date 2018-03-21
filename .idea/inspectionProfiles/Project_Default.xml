@@ -1,0 +1,7 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PhpIncompatibleReturnTypeInspection" enabled="true" level="INFORMATION" enabled_by_default="true" />
+    <inspection_tool class="PhpInconsistentReturnPointsInspection" enabled="true" level="INFORMATION" enabled_by_default="true" />
+  </profile>
+</component>
