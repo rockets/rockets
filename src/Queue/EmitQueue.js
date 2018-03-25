@@ -1,6 +1,4 @@
 import Queue from "./Queue";
-import Subscription from "../Channels/Subscription";
-import EmitTask from "./Tasks/EmitTask";
 import Log from "../Utility/Log";
 
 export default class EmitQueue extends Queue {

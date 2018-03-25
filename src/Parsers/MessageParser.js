@@ -66,7 +66,7 @@ export default class MessageParser {
      * @param {SocketClient} client
      * @param message
      */
-    static parse(client, message) {
+    parse(client, message) {
         let data = this.parseMessage(message);
 
         //

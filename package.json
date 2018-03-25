@@ -14,9 +14,14 @@
     "url": "git://github.com/rtheunissen/rockets.git"
   },
   "dependencies": {
+    "async": "^2.6.0",
     "async-es": "^2.6.0",
     "axios": "^0.18.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0",
     "dotenv": "^5.0.1",
+    "limiter": "^1.1.2",
     "lodash": "^4.17.5",
     "restler": "~3.4",
     "uuid": "^3.2.1",

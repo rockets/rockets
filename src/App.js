@@ -9,32 +9,27 @@ Master process, responsible for:
   - Forking socket server workers
   - Initiating request tasks
 */
-import CommentTask from "../Requests/CommentRequest";
-import PostTask from "../Requests/PostRequest";
-import HttpClient from "../Http/HttpClient";
-import Log from "../Utility/Log";
-import SocketServer from "../Http/SocketServer";
-import ModelQueue from "../Queue/ModelQueue";
-import {forever} from "async-es";
-import Channel from "../Channels/Channel";
-import MessageParser from "../Parsers/MessageParser";
-
-
-/**
- * @type {number}
- */
-const POST_BACKLOG_MOD = 20;
+import CommentTask from "./Requests/CommentRequest";
+import PostTask from "./Requests/PostRequest";
+import HttpClient from "./Http/HttpClient";
+import Log from "./Utility/Log";
+import SocketServer from "./Http/SocketServer";
+import ModelQueue from "./Queue/ModelQueue";
+import forever from "async/forever";
+import Channel from "./Channels/Channel";
+import MessageParser from "./Parsers/MessageParser";
+import ChannelRegistry from "./Channels/ChannelRegistry";
 
 // This is the requester.
-export default class Master {
+export default class App {
 
     constructor() {
-        this.loops    = 1;
         this.started  = Date.now();
 
         this.server   = new SocketServer();
         this.queue    = new ModelQueue();
         this.parser   = new MessageParser();
+        this.channels = new ChannelRegistry();
 
         this.http     = new HttpClient();
         this.comments = new CommentTask(this.http);
@@ -64,43 +59,12 @@ export default class Master {
     }
 
     /**
-     *
-     *
-     * @returns {Promise}
-     */
-    getPosts() {
-        if (this.loops % POST_BACKLOG_MOD) {
-            return this
-                .posts
-                .reversed()
-                .then((models) => this.broadcast(models));
-        }
-
-        //
-        return this
-            .posts
-            .forward()
-            .then((models) => this.broadcast(models));
-    }
-
-    /**
-     * @returns {Promise}
-     */
-    getComments() {
-        return this
-            .comments
-            .reversed()
-            .then((models) => this.broadcast(models));
-    }
-
-    /**
      * @returns {Promise}
      */
     stats() {
         return new Promise((resolve, reject) => {
             let stats = {
-                uptime:     Date.now() - this.started,
-                loops:      this.loops,
+                uptime:     Math.floor((Date.now() - this.started) / 1000),
                 comments:   this.comments.stats(),
                 posts:      this.posts.stats(),
                 server:     this.server.stats(),
@@ -125,11 +89,12 @@ export default class Master {
 
             //
             client.ws.on('message', (message) => {
-                MessageParser.parse(client, message);
+                this.parser.parse(client, message);
             });
 
             // Called when the connection to a client is lost.
             client.ws.on('close', () => {
+                this.channels.release(client);
                 Log.info('socket.disconnect', {client});
             });
 
@@ -144,7 +109,7 @@ export default class Master {
      * @param error
      */
     onError(error) {
-        Log.error(error.message, {error});
+        Log.error(error);
     }
 
     // Returns an array of model fetch tasks to run
@@ -155,15 +120,24 @@ export default class Master {
          */
         this.listen();
 
+        console.log('test');
+
         /**
          * Start the request loop.
          */
         forever((next) => {
-            return this
-                .stats()
-                .then(this.getComments)
-                .then(this.getPosts)
+            return this.stats()
+
+                //
+                .then(this.comments.fetch.bind(this.comments)).then(models => this.broadcast(models))
+
+                //
+                .then(this.posts.fetch.bind(this.posts)).then(models => this.broadcast(models))
+
+                //
                 .catch(this.onError)
+
+                //
                 .then(next);
         });
     }

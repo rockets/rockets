@@ -1,4 +1,9 @@
 require('dotenv').load();
+
+import App from './src/App'
+
+(new App()).start();
+
 //
 // cluster = require('cluster');
 // os      = require('os');

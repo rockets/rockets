@@ -1,4 +1,5 @@
-import * as winston from "winston";
+import winston from "winston";
+import {get} from "lodash";
 
 const DEFAULT = new winston.Logger({
     transports: [
@@ -10,12 +11,37 @@ const DEFAULT = new winston.Logger({
             handleExceptions: false,
         }),
         new (winston.transports.File)({
+            name:             'debug',
+            filename:         'logs/debug.log',
+            level:            'debug',
+            timestamp:        false,
+            handleExceptions: true,
+        }),
+        new winston.transports.Console({
+            level: 'info',
+            handleExceptions: false,
+            json: false,
+            colorize: true
+        })
+    ],
+    exitOnError: false
+});
+
+const ERROR = new winston.Logger({
+    transports: [
+        new (winston.transports.File)({
             name:             'error',
             filename:         'logs/error.log',
             level:            'error',
             timestamp:        false,
             handleExceptions: true,
         }),
+        new winston.transports.Console({
+            level: 'error',
+            handleExceptions: true,
+            json: false,
+            colorize: true
+        })
     ],
     exitOnError: false
 });
@@ -44,13 +70,15 @@ export default class Log {
         };
     }
 
-    // Log arbitrary arguments to the info log
     static info(message, meta, done) {
-        DEFAULT.log('info', message, Log.format(meta), done);
+        DEFAULT.info(message, Log.format(meta), done);
     }
 
-    // Log arbitrary arguments to the error log
-    static error(message, meta, done) {
-        DEFAULT.log('error', message, Log.format(meta), done);
+    static debug(message, meta, done) {
+        DEFAULT.debug(message, Log.format(meta), done);
+    }
+
+    static error(error, done) {
+        ERROR.error(get(error, 'message', 'Unknown Error'), {error}, done);
     }
 }

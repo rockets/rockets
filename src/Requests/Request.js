@@ -37,9 +37,9 @@ results. We just keep requesting in reverse indefinitely.
 */
 
 import {get, join, last, map, range} from "lodash";
-import {whilst} from "async";
+import whilst from "async/whilst";
 
-export default class ModelTask {
+export default class Request {
 
    /**
     * @param {Client} http
@@ -233,7 +233,7 @@ export default class ModelTask {
              *
              */
             const backtrack = (done) => {
-                let range = Math.min(ModelTask.REQUEST_LIMIT, end - start);
+                let range = Math.min(Request.REQUEST_LIMIT, end - start);
 
                 return this
                     .fetch(this.getBacklogParameters(start, range))

@@ -13,6 +13,7 @@ Socket server, responsible for:
 
 import * as ws from "ws";
 import SocketClient from "./SocketClient";
+import Log from "../Utility/Log";
 
 /**
  * @property {Array} connected
@@ -52,7 +53,7 @@ export default class SocketServer {
      */
     getOptions() {
         return {
-            port: process.env.PORT || 3210;
+            port: process.env.PORT || 3210,
         }
     }
 
@@ -73,6 +74,19 @@ export default class SocketServer {
 
             //
             this.clients[client.id] = client;
+
+            //
+            Log.info('socket.connect', {client});
+
+            // Called when the connection to a client is lost.
+            socket.on('close', () => {
+                Log.info('socket.disconnect', {client});
+            });
+
+            // Called when an error occurs on the socket.
+            socket.on('error', (error) => {
+                Log.error('socket.error', {error, client});
+            });
 
             //
             handler(client);

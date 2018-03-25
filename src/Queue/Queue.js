@@ -1,4 +1,4 @@
-import {queue} from "async";
+import queue from "async/queue";
 
 export default class Queue {
 

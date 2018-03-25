@@ -2,7 +2,7 @@ import Queue from "./Queue";
 import Subscription from "../Channels/Subscription";
 import Log from "../Utility/Log";
 import EmitQueue from "./EmitQueue";
-import {each} from "async-es";
+import each from "async/each";
 
 /**
  * @property {EmitQueue} emitter

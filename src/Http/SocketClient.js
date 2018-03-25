@@ -1,7 +1,7 @@
 import Log from "../Utility/Log";
 import uuid from 'uuid';
 import {isString} from "lodash";
-import {nextTick} from "async-es";
+import nextTick from "async/nextTick";
 
 /**
  * Wraps around a socket connection, providing an ID to identify it by.
